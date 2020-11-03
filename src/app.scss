@@ -1,0 +1,13 @@
+.version-selector {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+main.main-area {
+  display: flex;
+  flex: 1;
+  flex-flow: column nowrap;
+  row-gap: 0.25rem;
+}

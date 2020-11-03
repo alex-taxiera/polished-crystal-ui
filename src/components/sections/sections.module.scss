@@ -1,0 +1,35 @@
+@use 'src/styles/colors' as *;
+
+.container {
+  display: flex;
+  flex-flow: row wrap;
+  column-gap: 0.25rem;
+  row-gap: 0.25rem;
+
+  & > * {
+    flex: 1 1 140px;
+  }
+
+  &.vertical {
+    flex-flow: column nowrap;
+
+    & > * {
+      flex: 1 1;
+    }
+  }
+}
+
+section.section {
+  background: $content;
+  white-space: nowrap;
+
+  & > header {
+    color: white;
+    background: $primary;
+    padding: 0.25rem 0.5rem;
+  }
+
+  & > main {
+    padding: 0.25rem;
+  }
+}
