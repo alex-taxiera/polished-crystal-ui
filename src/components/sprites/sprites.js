@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 import {
   Section,
@@ -41,4 +42,11 @@ export function Sprites ({ sprites }) {
       }
     </Section>
   )
+}
+
+Sprites.propTypes = {
+  sprites: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string,
+    urls: PropTypes.arrayOf(PropTypes.string).isRequired,
+  })).isRequired,
 }

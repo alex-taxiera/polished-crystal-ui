@@ -50,7 +50,7 @@ export function App () {
       pcService?.fetchVersions().then((data) => batchUpdate(() => {
         setVersions(data)
         setCurrentVersion(data[0])
-      })).catch(console.error)
+      }))
     }
   })
 

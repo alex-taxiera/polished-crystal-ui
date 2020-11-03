@@ -2,12 +2,13 @@ import React from 'react'
 import {
   Link as RouterLink,
 } from 'react-router-dom'
+import PropTypes from 'prop-types'
 
-import './link.scss'
+import styles from './link.module.scss'
 
 export function BasicLink ({ children, ...props }) {
   return (
-    <RouterLink className="basic-link" {...props}>
+    <RouterLink className={styles.basic} {...props}>
       {children}
     </RouterLink>
   )
@@ -27,4 +28,8 @@ export function AnchorToTab ({ children, ...props }) {
       {children}
     </a>
   )
+}
+
+BasicLink.propTypes = Link.propTypes = AnchorToTab.propTypes = {
+  children: PropTypes.arrayOf(PropTypes.element),
 }

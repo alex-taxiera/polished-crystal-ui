@@ -69,7 +69,6 @@ class PolishedCrystalService {
   }
 
   async getSpriteRoute (pokemon, options = {}) {
-    console.log('pokemon :', pokemon)
     if (!this.version) {
       return
     }

@@ -2,12 +2,14 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { unstable_batchedUpdates as batchUpdate } from 'react-dom' // eslint-disable-line camelcase
-import { Helmet } from 'react-helmet'
+import { unstable_batchedUpdates as batchUpdate } from 'react-dom'
 import {
   useHistory,
   useParams,
 } from 'react-router-dom'
+import PropTypes from 'prop-types'
+import { Helmet } from 'react-helmet'
+
 import { Link } from '../components/link/link'
 import {
   Section,
@@ -304,6 +306,10 @@ function PokemonStats ({ name }) {
   )
 }
 
+PokemonStats.propTypes = {
+  name: PropTypes.string.isRequired,
+}
+
 function PokemonList ({ name = '' }) {
   const pcService = usePolishedCrystalService()
 
@@ -340,4 +346,8 @@ function PokemonList ({ name = '' }) {
       </select>
     </div>
   )
+}
+
+PokemonList.propTypes = {
+  name: PropTypes.string,
 }

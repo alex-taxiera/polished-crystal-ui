@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import cx from 'classnames'
 
 import styles from './sections.module.scss'
@@ -37,6 +38,13 @@ export function Section ({
   )
 }
 
+Section.propTypes = {
+  children: PropTypes.arrayOf(PropTypes.element),
+  title: PropTypes.string,
+  withBox: PropTypes.string,
+  contentClass: PropTypes.string,
+}
+
 export function SectionContainer ({ children, vertical = false }) {
   return (
     <div
@@ -45,4 +53,9 @@ export function SectionContainer ({ children, vertical = false }) {
       {children}
     </div>
   )
+}
+
+SectionContainer.propTypes = {
+  children: PropTypes.arrayOf(PropTypes.element),
+  vertical: PropTypes.bool,
 }
