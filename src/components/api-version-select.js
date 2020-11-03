@@ -7,25 +7,23 @@ import {
 
 export function VersionSelect () {
   const version = useContext(VersionContext)
-  // const key = 'version-select'
-  console.log('version :', version)
-  return (<div></div>)
-  //     throw version
-  // const options = version?.all?.map((version, i) => (
-  //   <option key={`${key}-${i}`} value={version}>{version}</option>
-  // ))
+  const key = 'version-select'
 
-  // return (
-  //   <>
-  //     <span>Version:&nbsp;</span>
-  //     <select
-  //       value={version.current ?? ''}
-  //       onChange={(event) => {
-  //         version.set(event.target.value)
-  //       }}
-  //     >
-  //       {options}
-  //     </select>
-  //   </>
-  // )
+  const options = version?.all && version.all.map((version, i) => (
+    <option key={`${key}-${i}`} value={version}>{version}</option>
+  ))
+
+  return (
+    <>
+      <span>Version:&nbsp;</span>
+      <select
+        value={version.current ?? ''}
+        onChange={(event) => {
+          version.set(event.target.value)
+        }}
+      >
+        {options}
+      </select>
+    </>
+  )
 }

@@ -25,21 +25,34 @@ export function Pokemon () {
   return (
     <>
       <Helmet>
-        <title>{name?.replace(/\b(\w)/g, (k) => k.toUpperCase())}</title>
+        <title>
+          {name?.replace(/\b(\w)/g, (k) => k.toUpperCase()) ?? 'Pokémon'}
+        </title>
       </Helmet>
       <PokemonList name={name} />
       {
         name
           ? (<PokemonStats name={name} />)
           : (
-            <Section contentClass="p-5">
-              <p className="lead">
-                Try selecting a pokemon from the dropdown!
-                <br />
-                <Link to="/pokemon/steelix">Perhaps Steelix?</Link>
-              </p>
-              <img src="/steelix.png" />
-            </Section>
+            <>
+              <div className="text-left pl-2">
+                <h3>
+                  Pokémon
+                </h3>
+              </div>
+              <Section contentClass="p-5">
+                <p className="lead">
+                  Try selecting a Pokémon from the dropdown!
+                  <br />
+                  <Link to="/pokemon/steelix">
+                    Steelix perhaps?
+                    <br />
+                    <br />
+                    <img src="/images/steelix.png" />
+                  </Link>
+                </p>
+              </Section>
+            </>
           )
       }
     </>
@@ -131,7 +144,6 @@ function PokemonStats ({ name }) {
     return (<div>Loading...</div>)
   }
 
-  console.log('normalSprites :', normalSprites)
   const sprites = []
   for (let i = 0; i < normalSprites.length; i++) {
     const parts = normalSprites[i].split('_')
@@ -144,8 +156,6 @@ function PokemonStats ({ name }) {
       urls: [ normalSprites[i], shinySprites[i] ],
     })
   }
-
-  console.log('data.evolutions.length :', data.evolutions.length)
 
   return (
     <>
@@ -168,10 +178,16 @@ function PokemonStats ({ name }) {
       </div>
       <Sprites sprites={sprites} />
       <SectionContainer>
-        <Section title="Types">
-          {data?.types.join(', ')}
+        <Section title="Types" withBox="left">
+          {
+            data.types.map((type, i) => (
+              <div key={`type-${i}`}>
+                {type}
+              </div>
+            ))
+          }
         </Section>
-        <Section title="Abilities">
+        <Section title="Abilities" withBox="left">
           <div>
             1:&nbsp;{data.abilities.one}
           </div>
@@ -182,7 +198,7 @@ function PokemonStats ({ name }) {
             H:&nbsp;{data.abilities.hidden}
           </div>
         </Section>
-        <Section title="Wild Held Items">
+        <Section title="Wild Held Items" withBox="left">
           {
             data.heldItems.map((item, i) => (
               <div key={`items-${i}`}>
@@ -207,8 +223,12 @@ function PokemonStats ({ name }) {
           ) : undefined
       }
       <SectionContainer>
-        <Section title="Egg Groups">
-          {data.eggGroups.join(', ')}
+        <Section title="Egg Groups" withBox="left">
+          {
+            data.eggGroups.map((group, i) => (
+              <div key={`group-${i}`}>{group}</div>
+            ))
+          }
         </Section>
         <Section title="Growth Rate">
           {data.growthRate}
@@ -224,21 +244,24 @@ function PokemonStats ({ name }) {
             {data.catchRate}
           </Section>
         </SectionContainer>
-        <Section title="Gender" contentClass="d-flex justify-content-center">
+        <Section
+          title="Gender"
+          withBox={!data.gender.genderless ? 'right' : undefined}
+        >
           {
             data.gender.genderless ? (
               <>
                 Genderless
               </>
             ) : (
-              <div className="text-right">
+              <>
                 <div>
                   Male: {data.gender.male}%
                 </div>
                 <div>
                   Female: {data.gender.female}%
                 </div>
-              </div>
+              </>
             )
           }
         </Section>
@@ -261,7 +284,7 @@ function PokemonStats ({ name }) {
         <Section title="Level Up Moves">
           {
             data.movesByLevel.map(({ level, move }) => (
-              <div key={`level-move-${move}`}>
+              <div key={`level-${level}-move-${move}`}>
                 {move}
               </div>
             ))

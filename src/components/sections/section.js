@@ -6,8 +6,14 @@ import styles from './sections.module.scss'
 export function Section ({
   title,
   children,
+  withBox,
   contentClass,
 }) {
+  const mainClass = cx(
+    contentClass,
+    withBox ? 'd-flex justify-content-center' : undefined,
+  )
+
   return (
     <section className={styles.section}>
       { title ? (
@@ -17,8 +23,15 @@ export function Section ({
           </h6>
         </header>
       ) : undefined}
-      <main className={contentClass}>
-        {children}
+      <main className={mainClass}>
+        {
+          withBox
+            ? (
+              <div className={`text-${withBox}`}>
+                {children}
+              </div>
+            ) : children
+        }
       </main>
     </section>
   )
