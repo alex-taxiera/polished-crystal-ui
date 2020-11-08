@@ -3,7 +3,7 @@ import React, {
 } from 'react'
 import {
   VersionContext,
-} from '../services/pc-api'
+} from '../../../src/client/services/pc-api'
 
 export function VersionSelect () {
   const version = useContext(VersionContext)

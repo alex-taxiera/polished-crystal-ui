@@ -1,0 +1,7 @@
+{
+  "ignore": [],
+  "watch": ["src/server"],
+  "execMap": {
+    "js": "babel-node"
+  }
+}

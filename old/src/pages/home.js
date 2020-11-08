@@ -1,5 +1,5 @@
 import React from 'react'
-import { AnchorToTab } from '../components/link/link'
+import { AnchorToTab } from '../../../src/client/components/link/link'
 
 import {
   Section,

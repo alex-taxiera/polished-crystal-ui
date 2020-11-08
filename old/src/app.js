@@ -9,22 +9,22 @@ import {
 } from 'react-router-dom'
 
 import { Home } from './pages/home'
-import { Pokemon } from './pages/pokemon'
+import { Pokemon } from '../../src/client/pages/pokemon'
 
 import {
   AnchorToTab,
   Link,
   BasicLink,
-} from './components/link/link'
+} from '../../src/client/components/link/link'
 import { VersionSelect } from './components/api-version-select'
 import {
   ConfigContext,
   loadConfig,
-} from './services/config'
+} from '../../src/client/services/config'
 import {
   usePolishedCrystalService,
   VersionContext,
-} from './services/pc-api'
+} from '../../src/client/services/pc-api'
 
 import './app.scss'
 import { unstable_batchedUpdates as batchUpdate } from 'react-dom'

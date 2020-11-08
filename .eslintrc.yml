@@ -5,8 +5,8 @@ parserOptions:
   ecmaVersion: 2020
   sourceType: module
 extends:
-  - '@alex-taxiera/eslint-config-esm'
   - 'plugin:react/recommended'
+  - '@alex-taxiera/eslint-config-esm'
 rules: {
   'react/prop-types': ['warn'],
   'no-console': ['warn']
