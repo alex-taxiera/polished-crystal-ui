@@ -25,6 +25,8 @@ module.exports = (api) => {
       '@babel/plugin-syntax-dynamic-import',
       '@loadable/babel-plugin',
       '@babel/plugin-proposal-optional-chaining',
+      '@babel/plugin-proposal-nullish-coalescing-operator',
+      '@babel/plugin-transform-runtime',
     ],
   }
 }

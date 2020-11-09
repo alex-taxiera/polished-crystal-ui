@@ -28,7 +28,7 @@ const getConfig = (target) => ({
         },
       },
       {
-        test: /\.(png|svg|jpg|gif)$/,
+        test: /\.(png|svg|jpe?g|gif)$/,
         use: [
           {
             loader: 'file-loader',

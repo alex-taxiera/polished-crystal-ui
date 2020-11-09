@@ -2,5 +2,9 @@
 
 a,
 a:hover {
-  color: $blue;
+  color: inherit;
+
+  p & {
+    color: $blue;
+  }
 }

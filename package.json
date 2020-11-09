@@ -2,6 +2,18 @@
   "name": "polished-crystal-ui",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "rm -rf public lib",
+    "build": "npm run clean && NODE_ENV=production npm run build:webpack && npm run build:lib",
+    "build:webpack": "webpack",
+    "build:lib": "babel -d lib src",
+    "start": "npm-run-all --parallel start:*",
+    "start:client": "npm run build:webpack -- --watch",
+    "start:server": "nodemon src/server/index.js",
+    "prod": "NODE_ENV=production node lib/server/index.js"
+  },
   "dependencies": {
     "classnames": "^2.2.6",
     "node-fetch": "^2.6.1",
@@ -15,37 +27,14 @@
     "query-string": "^6.13.6",
     "serialize-javascript": "^5.0.1"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "lint": "npx eslint src",
-    "lint:fix": "npm run lint -- --fix"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "devDependencies": {
     "@alex-taxiera/eslint-config-esm": "^1.0.3",
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/node": "^7.12.6",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.12.1",
     "@babel/plugin-proposal-optional-chaining": "^7.12.1",
+    "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-react": "^7.12.5",
     "@loadable/babel-plugin": "^5.13.2",

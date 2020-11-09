@@ -1,3 +1,4 @@
+import fetch from 'node-fetch'
 import {
   createContext,
   useContext,
@@ -56,6 +57,55 @@ class PolishedCrystalService {
     }
 
     return fetch(`${this.baseUrl}/${this.version}/pokemon/stat/${pokemon}`)
+      .then((res) => res.json())
+      .then(async (stat) => {
+        stat.abilities = await this.fillAbilityDescriptions(stat.abilities)
+
+        if (stat.unfaithful?.abilities) {
+          stat.unfaithful.abilities = await this.fillAbilityDescriptions(
+            stat.unfaithful.abilities,
+          )
+        }
+
+        return stat
+      })
+  }
+
+  async fillAbilityDescriptions (abilities) {
+    const descriptions = await Promise.all(
+      Object.entries(abilities).map(async ([ slot, ability ]) => [
+        slot,
+        (await this.fetchAbility(ability)).description,
+      ]),
+    )
+
+    const abilitiesWithDescription = {}
+    for (const [ slot, description ] of descriptions) {
+      abilitiesWithDescription[slot] = `${
+        abilities[slot]
+      } - ${
+        description
+      }`
+    }
+
+    return abilitiesWithDescription
+  }
+
+  async fetchAbilityList () {
+    if (!this.version) {
+      return
+    }
+
+    return fetch(`${this.baseUrl}/${this.version}/ability`)
+      .then((res) => res.json())
+  }
+
+  async fetchAbility (ability) {
+    if (!this.version) {
+      return
+    }
+
+    return fetch(`${this.baseUrl}/${this.version}/ability/${ability}`)
       .then((res) => res.json())
   }
 

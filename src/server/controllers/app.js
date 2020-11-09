@@ -8,10 +8,11 @@ import { HelmetProvider } from 'react-helmet-async'
 import { ChunkExtractor } from '@loadable/server'
 import queryString from 'query-string'
 
+import fetch from 'node-fetch'
+import config from 'config'
 import serialize from 'serialize-javascript'
 import helica from 'helica'
 import { routeLoader } from '../utils/route-loader.js'
-import { config } from 'process'
 
 const manifestPath = resolve(
   __dirname,
@@ -41,8 +42,9 @@ class App {
       pcApiUrl: config.get('pcApiUrl'),
     }
 
-    const versions = await fetch(`${webConfig.pcApiUrl}/versions`)
-      .then((res) => res.json())
+    const versions = await fetch(
+      `${webConfig.pcApiUrl}/polished-crystal/versions`,
+    ).then((res) => res.json())
 
     const preData = {
       manifest,

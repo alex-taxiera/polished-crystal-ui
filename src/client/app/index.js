@@ -29,7 +29,7 @@ export function App ({ data }) {
         <VersionContext.Provider value={versionData}>
           <MainSEO manifest={data.manifest} />
           <Header />
-          <main className={styles.mainArea}>
+          <main className={styles['main-area']}>
             <Routes />
           </main>
           <Footer />

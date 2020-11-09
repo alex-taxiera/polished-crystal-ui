@@ -5,6 +5,8 @@ import {
   Section,
 } from '../sections/section'
 
+import styles from './sprites.module.scss'
+
 const spriteWeight = {
   plain: 0,
   kanto: 1,
@@ -34,8 +36,8 @@ export function Sprites ({ sprites }) {
                 : undefined
             }
             <div className="d-flex">
-              <img src={normal} />
-              <img src={shiny} />
+              <img src={normal} className={styles.sprite} />
+              <img src={shiny} className={styles.sprite} />
             </div>
           </div>
         ))

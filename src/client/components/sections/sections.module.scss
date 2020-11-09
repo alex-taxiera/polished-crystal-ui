@@ -1,4 +1,4 @@
-@use 'src/styles/colors' as *;
+@use 'colors' as *;
 
 .container {
   display: flex;
@@ -21,7 +21,7 @@
 
 section.section {
   background: $content;
-  white-space: nowrap;
+  // white-space: nowrap;
 
   & > header {
     color: white;
@@ -30,6 +30,6 @@ section.section {
   }
 
   & > main {
-    padding: 0.25rem;
+    padding: 0.25rem 1rem;
   }
 }

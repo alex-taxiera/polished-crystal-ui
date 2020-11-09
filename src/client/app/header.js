@@ -3,8 +3,8 @@ import React from 'react'
 import {
   Link,
   BasicLink,
-} from '../../src/client/components/link/link'
-import { VersionSelect } from './components/api-version-select'
+} from '../components/link/link'
+import { VersionSelect } from '../components/api-version-select'
 
 import styles from './header.module.scss'
 
@@ -26,7 +26,7 @@ export function Header () {
           Pokémon
         </Link>
       </div>
-      <div className={styles.versionSelector}>
+      <div className={styles['version-selector']}>
         <VersionSelect />
       </div>
     </header>

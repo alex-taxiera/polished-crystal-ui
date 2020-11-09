@@ -4,6 +4,7 @@ html,
 body,
 #root {
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 body {
@@ -29,6 +30,10 @@ code {
   display: flex;
   flex-flow: column;
   width: 1300px;
+}
+
+img {
+  max-width: 100%;
 }
 
 label {

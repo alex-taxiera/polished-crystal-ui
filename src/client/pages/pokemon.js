@@ -8,7 +8,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import PropTypes from 'prop-types'
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet-async'
 
 import { Link } from '../components/link/link'
 import {
@@ -20,7 +20,10 @@ import {
   usePolishedCrystalService,
 } from '../services/pc-api'
 
-export function Pokemon () {
+import SteelixImg from '../../assets/steelix.png'
+import { PokeballSpinner } from '../components/pokeball-spinner/pokeball'
+
+export default function Pokemon () {
   const params = useParams()
   const name = params.name
 
@@ -36,25 +39,18 @@ export function Pokemon () {
         name
           ? (<PokemonStats name={name} />)
           : (
-            <>
-              <div className="text-left pl-2">
-                <h3>
-                  Pokémon
-                </h3>
-              </div>
-              <Section contentClass="p-5">
-                <p className="lead">
-                  Try selecting a Pokémon from the dropdown!
+            <Section contentClass="py-4">
+              <p className="lead">
+                Try selecting a Pokémon from the dropdown!
+                <br />
+                <Link to="/pokemon/steelix">
+                  Steelix perhaps?
                   <br />
-                  <Link to="/pokemon/steelix">
-                    Steelix perhaps?
-                    <br />
-                    <br />
-                    <img src="/images/steelix.png" />
-                  </Link>
-                </p>
-              </Section>
-            </>
+                  <br />
+                  <img src={SteelixImg} />
+                </Link>
+              </p>
+            </Section>
           )
       }
     </>
@@ -123,8 +119,8 @@ function PokemonStats ({ name }) {
 
     Promise.all([
       pcService.fetchStat(name),
-      pcService.getSpriteRoute(name, { shiny: false, scale: 2 }),
-      pcService.getSpriteRoute(name, { shiny: true, scale: 2 }),
+      pcService.getSpriteRoute(name, { shiny: false, scale: 4 }),
+      pcService.getSpriteRoute(name, { shiny: true, scale: 4 }),
     ]).then(([ data, normalSprites, shinySprites ]) => {
       batchUpdate(() => {
         setIsLoading(false)
@@ -143,7 +139,7 @@ function PokemonStats ({ name }) {
   }, [ faithful ])
 
   if (isLoading) {
-    return (<div>Loading...</div>)
+    return (<PokeballSpinner />)
   }
 
   const sprites = []
@@ -189,41 +185,29 @@ function PokemonStats ({ name }) {
             ))
           }
         </Section>
-        <Section title="Abilities" withBox="left">
-          <div>
-            1:&nbsp;{data.abilities.one}
-          </div>
-          <div>
-            2:&nbsp;{data.abilities.two}
-          </div>
-          <div>
-            H:&nbsp;{data.abilities.hidden}
-          </div>
-        </Section>
         <Section title="Wild Held Items" withBox="left">
           {
-            data.heldItems.map((item, i) => (
-              <div key={`items-${i}`}>
-                {item}
-              </div>
-            ))
+            data.heldItems.length === 0
+              ? <div>None</div>
+              : data.heldItems.map((item, i) => (
+                <div key={`items-${i}`}>
+                  {item}
+                </div>
+              ))
+          }
+        </Section>
+        <Section title="Evolutions">
+          {
+            data.evolutions.length === 0
+              ? <div>None</div>
+              : data.evolutions.map((evo, i) => (
+                <div key={`evo-${i}`}>
+                  {`${evo.to}: ${evo.type} ${evo.requirement}`}
+                </div>
+              ))
           }
         </Section>
       </SectionContainer>
-      {
-        data.evolutions.length > 0
-          ? (
-            <Section title="Evolutions">
-              {
-                data.evolutions.map((evo, i) => (
-                  <div key={`evo-${i}`}>
-                    {`${evo.to}: ${evo.type} ${evo.requirement}`}
-                  </div>
-                ))
-              }
-            </Section>
-          ) : undefined
-      }
       <SectionContainer>
         <Section title="Egg Groups" withBox="left">
           {
@@ -232,20 +216,6 @@ function PokemonStats ({ name }) {
             ))
           }
         </Section>
-        <Section title="Growth Rate">
-          {data.growthRate}
-        </Section>
-        <Section title="Hatch Cycles">
-          {data.hatchCycles}
-        </Section>
-        <SectionContainer vertical={true}>
-          <Section title="Base Experience">
-            {data.baseExp}
-          </Section>
-          <Section title="Catch Rate">
-            {data.catchRate}
-          </Section>
-        </SectionContainer>
         <Section
           title="Gender"
           withBox={!data.gender.genderless ? 'right' : undefined}
@@ -267,7 +237,34 @@ function PokemonStats ({ name }) {
             )
           }
         </Section>
+        <SectionContainer vertical={true}>
+          <Section title="Growth Rate">
+            {data.growthRate}
+          </Section>
+          <Section title="Hatch Cycles">
+            {data.hatchCycles}
+          </Section>
+        </SectionContainer>
+        <SectionContainer vertical={true}>
+          <Section title="Base Experience">
+            {data.baseExp}
+          </Section>
+          <Section title="Catch Rate">
+            {data.catchRate}
+          </Section>
+        </SectionContainer>
       </SectionContainer>
+      <Section title="Abilities" withBox="left">
+        <div className="mb-2">
+          1:&nbsp;{data.abilities.one}
+        </div>
+        <div className="mb-2">
+          2:&nbsp;{data.abilities.two}
+        </div>
+        <div>
+          H:&nbsp;{data.abilities.hidden}
+        </div>
+      </Section>
       <SectionContainer>
         <Section
           title="Base Stats"
@@ -283,16 +280,16 @@ function PokemonStats ({ name }) {
         </Section>
       </SectionContainer>
       <SectionContainer>
-        <Section title="Level Up Moves">
+        <Section title="Level Up Moves" withBox="left">
           {
             data.movesByLevel.map(({ level, move }) => (
               <div key={`level-${level}-move-${move}`}>
-                {move}
+                {level}&nbsp;{move}
               </div>
             ))
           }
         </Section>
-        <Section title="TM/HM Moves">
+        <Section title="TM/HM Moves" withBox="left">
           {
             data.movesByTMHM.map((move) => (
               <div key={`tmhm-move-${move}`}>
