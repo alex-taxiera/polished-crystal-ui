@@ -59,14 +59,28 @@ class PolishedCrystalService {
     return fetch(`${this.baseUrl}/${this.version}/pokemon/stat/${pokemon}`)
       .then((res) => res.json())
       .then(async (stat) => {
-        stat.abilities = await this.fillAbilityDescriptions(stat.abilities)
+        const [
+          faithFulAbilities,
+          levelMoves,
+          tmhmMoves,
+        ] = await Promise.all([
+          this.fillAbilityDescriptions(stat.abilities),
+          this.fetchBulkMoves(stat.movesByLevel.map((move) => move.id)),
+          this.fetchBulkMoves(stat.movesByTMHM.map((move) => move.id)),
+        ])
+        stat.movesByTMHM = Object.values(tmhmMoves)
+        stat.abilities = faithFulAbilities
+        stat.movesByLevel = stat.movesByLevel.map((move) => ({
+          level: move.level,
+          ...levelMoves[move.id],
+        }))
 
         if (stat.unfaithful?.abilities) {
           stat.unfaithful.abilities = await this.fillAbilityDescriptions(
             stat.unfaithful.abilities,
           )
         }
-
+        console.log('stat :', stat)
         return stat
       })
   }
@@ -106,6 +120,35 @@ class PolishedCrystalService {
     }
 
     return fetch(`${this.baseUrl}/${this.version}/ability/${ability}`)
+      .then((res) => res.json())
+  }
+
+  async fetchMoveList () {
+    if (!this.version) {
+      return
+    }
+
+    return fetch(`${this.baseUrl}/${this.version}/move`)
+      .then((res) => res.json())
+  }
+
+  async fetchMove (id) {
+    if (!this.version) {
+      return
+    }
+
+    return fetch(`${this.baseUrl}/${this.version}/move/${id}`)
+      .then((res) => res.json())
+  }
+
+  async fetchBulkMoves (moves) {
+    if (!this.version) {
+      return
+    }
+
+    const query = `?moves=${moves.join()}`
+
+    return fetch(`${this.baseUrl}/${this.version}/move/bulk${query}`)
       .then((res) => res.json())
   }
 

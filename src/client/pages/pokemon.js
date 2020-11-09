@@ -282,18 +282,18 @@ function PokemonStats ({ name }) {
       <SectionContainer>
         <Section title="Level Up Moves" withBox="left">
           {
-            data.movesByLevel.map(({ level, move }) => (
-              <div key={`level-${level}-move-${move}`}>
-                {level}&nbsp;{move}
+            data.movesByLevel.map(({ level, name, id }) => (
+              <div key={`level-${level}-move-${id}`}>
+                {level}&nbsp;{name}
               </div>
             ))
           }
         </Section>
         <Section title="TM/HM Moves" withBox="left">
           {
-            data.movesByTMHM.map((move) => (
-              <div key={`tmhm-move-${move}`}>
-                {move}
+            data.movesByTMHM.map(({ name, id }) => (
+              <div key={`tmhm-move-${id}`}>
+                {name}
               </div>
             ))
           }
