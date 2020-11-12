@@ -2,9 +2,9 @@ import React from 'react'
 import {
   Link as RouterLink,
 } from 'react-router-dom'
-import PropTypes from 'prop-types'
 
 import styles from './link.module.scss'
+import { ChildrenShape } from '../../utils/children-shape'
 
 export function BasicLink ({ children, ...props }) {
   return (
@@ -31,5 +31,5 @@ export function AnchorToTab ({ children, ...props }) {
 }
 
 BasicLink.propTypes = Link.propTypes = AnchorToTab.propTypes = {
-  children: PropTypes.arrayOf(PropTypes.element),
+  children: ChildrenShape,
 }

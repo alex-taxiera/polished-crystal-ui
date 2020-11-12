@@ -16,7 +16,7 @@ export function Routes () {
       <Route exact path="/">
         <Home />
       </Route>
-      <Route path="/pokemon/:name?">
+      <Route path="/pokemon/:id?">
         <Pokemon />
       </Route>
       <Route>

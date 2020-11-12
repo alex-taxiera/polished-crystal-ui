@@ -23,21 +23,24 @@ import {
 import SteelixImg from '../../assets/steelix.png'
 import { PokeballSpinner } from '../components/pokeball-spinner/pokeball'
 
+import { Abilities } from '../components/abilities/abilities'
+import { MoveTable } from '../components/move-table/move-table'
+
 export default function Pokemon () {
   const params = useParams()
-  const name = params.name
+  const id = params.id
 
   return (
     <>
       <Helmet>
         <title>
-          {name?.replace(/\b(\w)/g, (k) => k.toUpperCase()) ?? 'Pokémon'}
+          Pokémon
         </title>
       </Helmet>
-      <PokemonList name={name} />
+      <PokemonList id={id} />
       {
-        name
-          ? (<PokemonStats name={name} />)
+        id
+          ? (<PokemonStats id={id} />)
           : (
             <Section contentClass="py-4">
               <p className="lead">
@@ -63,8 +66,8 @@ function pickStat (data, key, faithful = false) {
 }
 
 function formatStat (data, faithful = false) {
-  const unfaithful = data.unfaithful ?? {}
   return {
+    ...data,
     types: pickStat(data, 'types', faithful),
     abilities: pickStat(data, 'abilities', faithful),
     evolutions: pickStat(data, 'evolutions', faithful),
@@ -78,10 +81,10 @@ function formatStat (data, faithful = false) {
     baseStats: pickStat(data, 'baseStats', faithful),
     evYield: pickStat(data, 'evYield', faithful),
     movesByLevel: data.movesByLevel
-      .concat((!faithful && unfaithful.movesByLevel) || [])
+      .concat((!faithful && data.unfaithful?.movesByLevel) || [])
       .sort((a, b) => a.level - b.level),
     movesByTMHM: data.movesByTMHM
-      .concat((!faithful && unfaithful.movesByTMHM) || []),
+      .concat((!faithful && data.unfaithful?.movesByTMHM) || []),
   }
 }
 
@@ -91,13 +94,13 @@ function StatBlock ({ stats, id }) {
     .concat([ [ 'total', list.reduce((total, [ _, v ]) => total + v, 0) ] ])
     .map(([ label, value ]) => (
       <div key={`${id}-${label}`} className="p-1">
-        <div>{label.toUpperCase()}</div>
+        <h6>{label.toUpperCase()}</h6>
         <div>{value}</div>
       </div>
     ))
 }
 
-function PokemonStats ({ name }) {
+function PokemonStats ({ id }) {
   const pcService = usePolishedCrystalService()
   const [ isLoading, setIsLoading ] = useState(true)
   const [ stat, setStat ] = useState()
@@ -118,9 +121,9 @@ function PokemonStats ({ name }) {
     setIsLoading(true)
 
     Promise.all([
-      pcService.fetchStat(name),
-      pcService.getSpriteRoute(name, { shiny: false, scale: 4 }),
-      pcService.getSpriteRoute(name, { shiny: true, scale: 4 }),
+      pcService.fetchStat(id),
+      pcService.getSpriteRoute(id, { shiny: false, scale: 4 }),
+      pcService.getSpriteRoute(id, { shiny: true, scale: 4 }),
     ]).then(([ data, normalSprites, shinySprites ]) => {
       batchUpdate(() => {
         setIsLoading(false)
@@ -130,7 +133,7 @@ function PokemonStats ({ name }) {
         setData(formatStat(data))
       })
     })
-  }, [ name, pcService ])
+  }, [ id, pcService ])
 
   useEffect(() => {
     if (stat) {
@@ -147,19 +150,26 @@ function PokemonStats ({ name }) {
     const parts = normalSprites[i].split('_')
 
     sprites.push({
-      name: normalSprites.length > 1 &&
-        parts.length > 1 &&
-        parts[parts.length - 1].split('?')[0]
-          .replace(/\b(\w)/g, (k) => k.toUpperCase()),
+      name: (normalSprites.length > 1 && parts.length > 1)
+        ? parts[parts.length - 1].split('?')[0]
+          .replace(/\b(\w)/g, (k) => k.toUpperCase())
+        : undefined,
       urls: [ normalSprites[i], shinySprites[i] ],
     })
   }
 
+  console.log('data :>> ', data);
+
   return (
     <>
+      <Helmet>
+        <title>
+          {data.displayName}
+        </title>
+      </Helmet>
       <div className="d-flex justify-content-between px-2">
         <h3>
-          {name.replace(/\b(\w)/g, (k) => k.toUpperCase())}
+          {data.displayName}
         </h3>
         <div>
           <label htmlFor="faithful-check">
@@ -196,19 +206,6 @@ function PokemonStats ({ name }) {
               ))
           }
         </Section>
-        <Section title="Evolutions">
-          {
-            data.evolutions.length === 0
-              ? <div>None</div>
-              : data.evolutions.map((evo, i) => (
-                <div key={`evo-${i}`}>
-                  {`${evo.to}: ${evo.type} ${evo.requirement}`}
-                </div>
-              ))
-          }
-        </Section>
-      </SectionContainer>
-      <SectionContainer>
         <Section title="Egg Groups" withBox="left">
           {
             data.eggGroups.map((group, i) => (
@@ -237,7 +234,20 @@ function PokemonStats ({ name }) {
             )
           }
         </Section>
-        <SectionContainer vertical={true}>
+        <Section title="Evolutions">
+          {
+            data.evolutions.length === 0
+              ? <div>None</div>
+              : data.evolutions.map((evo, i) => (
+                <div key={`evo-${i}`}>
+                  {`${evo.to.displayName}: ${evo.type} ${evo.requirement}`}
+                </div>
+              ))
+          }
+        </Section>
+      </SectionContainer>
+      <SectionContainer>
+        <SectionContainer>
           <Section title="Growth Rate">
             {data.growthRate}
           </Section>
@@ -245,7 +255,7 @@ function PokemonStats ({ name }) {
             {data.hatchCycles}
           </Section>
         </SectionContainer>
-        <SectionContainer vertical={true}>
+        <SectionContainer>
           <Section title="Base Experience">
             {data.baseExp}
           </Section>
@@ -254,17 +264,7 @@ function PokemonStats ({ name }) {
           </Section>
         </SectionContainer>
       </SectionContainer>
-      <Section title="Abilities" withBox="left">
-        <div className="mb-2">
-          1:&nbsp;{data.abilities.one}
-        </div>
-        <div className="mb-2">
-          2:&nbsp;{data.abilities.two}
-        </div>
-        <div>
-          H:&nbsp;{data.abilities.hidden}
-        </div>
-      </Section>
+      <Abilities abilities={data.abilities} />
       <SectionContainer>
         <Section
           title="Base Stats"
@@ -279,35 +279,27 @@ function PokemonStats ({ name }) {
           <StatBlock id="ev" stats={data.evYield} />
         </Section>
       </SectionContainer>
-      <SectionContainer>
-        <Section title="Level Up Moves" withBox="left">
-          {
-            data.movesByLevel.map(({ level, name, id }) => (
-              <div key={`level-${level}-move-${id}`}>
-                {level}&nbsp;{name}
-              </div>
-            ))
-          }
-        </Section>
-        <Section title="TM/HM Moves" withBox="left">
-          {
-            data.movesByTMHM.map(({ name, id }) => (
-              <div key={`tmhm-move-${id}`}>
-                {name}
-              </div>
-            ))
-          }
-        </Section>
-      </SectionContainer>
+      <Section
+        title="Level Up Moves"
+        contentClass="d-flex justify-content-center"
+      >
+        <MoveTable moves={data.movesByLevel} />
+      </Section>
+      <Section
+        title="TM/HM Moves"
+        contentClass="d-flex justify-content-center"
+      >
+        <MoveTable moves={data.movesByTMHM} tmhm={true} />
+      </Section>
     </>
   )
 }
 
 PokemonStats.propTypes = {
-  name: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 }
 
-function PokemonList ({ name = '' }) {
+function PokemonList ({ id = '' }) {
   const pcService = usePolishedCrystalService()
 
   const [ list, setList ] = useState()
@@ -315,22 +307,22 @@ function PokemonList ({ name = '' }) {
 
   useEffect(() => {
     pcService?.fetchStatList()
-      .then((list) => setList(
-        list?.map((l) => l.replace(/\b(\w)/g, (k) => k.toUpperCase()))),
-      )
+      .then((list) => setList(list.map(({ id, displayName }) => ({
+        id: id.toLowerCase(),
+        displayName,
+      }))))
   }, [ pcService ])
 
-  const optionKey = 'pokemon-option'
   const options = list && list.map((p, i) => (
-    <option key={`${optionKey}-${i}`} value={p}>
-      {p}
+    <option key={`pokemon-option-${i}`} value={p.id}>
+      {p.displayName}
     </option>
   ))
 
   return (
     <div className="d-flex justify-content-end px-2">
       <select
-        value={name.replace(/\b(\w)/g, (k) => k.toUpperCase())}
+        value={id.toLowerCase()}
         onChange={
           (event) => history
             .push(`/pokemon/${event.target.value.toLowerCase()}`)
@@ -346,5 +338,5 @@ function PokemonList ({ name = '' }) {
 }
 
 PokemonList.propTypes = {
-  name: PropTypes.string,
+  id: PropTypes.string,
 }

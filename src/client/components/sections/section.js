@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import cx from 'classnames'
 
 import styles from './sections.module.scss'
+import { ChildrenShape } from '../../utils/children-shape'
 
 export function Section ({
   title,
@@ -10,20 +11,26 @@ export function Section ({
   withBox,
   contentClass,
 }) {
+  const sectionClass = cx(
+    styles.section,
+  )
   const mainClass = cx(
     contentClass,
     withBox ? 'd-flex justify-content-center' : undefined,
   )
 
   return (
-    <section className={styles.section}>
-      { title ? (
-        <header>
-          <h6>
-            {title}
-          </h6>
-        </header>
-      ) : undefined}
+    <section className={sectionClass}>
+      {
+        title
+          ? (
+            <header>
+              <h6>
+                {title}
+              </h6>
+            </header>
+          ) : undefined
+      }
       <main className={mainClass}>
         {
           withBox
@@ -39,16 +46,24 @@ export function Section ({
 }
 
 Section.propTypes = {
-  children: PropTypes.arrayOf(PropTypes.element),
+  children: ChildrenShape,
   title: PropTypes.string,
   withBox: PropTypes.string,
   contentClass: PropTypes.string,
 }
 
-export function SectionContainer ({ children, vertical = false }) {
+export function SectionContainer ({
+  children,
+  vertical = false,
+}) {
+  const className = cx(
+    styles.container,
+    vertical ? styles.vertical : undefined,
+  )
+
   return (
     <div
-      className={cx(styles.container, vertical ? styles.vertical : undefined)}
+      className={className}
     >
       {children}
     </div>
@@ -56,6 +71,7 @@ export function SectionContainer ({ children, vertical = false }) {
 }
 
 SectionContainer.propTypes = {
-  children: PropTypes.arrayOf(PropTypes.element),
+  children: ChildrenShape,
   vertical: PropTypes.bool,
+  gapless: PropTypes.bool,
 }

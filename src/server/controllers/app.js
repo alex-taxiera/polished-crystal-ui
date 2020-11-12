@@ -103,7 +103,7 @@ class Manifest {
 
   get (res) {
     helica.send(res, '', 302, {
-      Location: '/dist/web/manifest.webmanifest',
+      Location: '/dist/web/manifest.json',
     })
   }
 

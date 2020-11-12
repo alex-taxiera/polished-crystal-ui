@@ -1,5 +1,8 @@
-import React from 'react'
+import React, {
+  useState,
+} from 'react'
 import PropTypes from 'prop-types'
+import cx from 'classnames'
 
 import {
   Section,
@@ -19,6 +22,10 @@ function sortSprites ({ name: a }, { name: b }) {
 }
 
 export function Sprites ({ sprites }) {
+  console.log('sprites :>> ', sprites);
+  const [ loadedImages, setLoadedImages ] = useState(0)
+  const wrapperClass = cx(styles.wrapper, loadedImages < 2 && 'd-none')
+
   return (
     <Section
       title="Sprites"
@@ -35,9 +42,19 @@ export function Sprites ({ sprites }) {
                 ? <header><h6>{spriteName}</h6></header>
                 : undefined
             }
-            <div className="d-flex">
-              <img src={normal} className={styles.sprite} />
-              <img src={shiny} className={styles.sprite} />
+            <div className={wrapperClass}>
+              <div>
+                <img
+                  src={normal}
+                  onLoad={() => setLoadedImages(loadedImages + 1)}
+                />
+              </div>
+              <div>
+                <img
+                  src={shiny}
+                  onLoad={() => setLoadedImages(loadedImages + 1)}
+                />
+              </div>
             </div>
           </div>
         ))

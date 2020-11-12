@@ -1,0 +1,15 @@
+$row-spacing: 1rem;
+
+table.moves {
+  table-layout: fixed;
+
+  & > tbody > tr {
+    &:first-child > td {
+      padding-top: $row-spacing;
+    }
+
+    &:last-child > td {
+      padding-bottom: $row-spacing;
+    }
+  }
+}

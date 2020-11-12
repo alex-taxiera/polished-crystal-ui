@@ -1,0 +1,19 @@
+.abilities {
+  & > div {
+    display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+
+    & > div {
+      margin-bottom: 0.5rem;
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      flex-flow: row wrap;
+
+      &:last-child {
+        margin-bottom: unset;
+      }
+    }
+  }
+}

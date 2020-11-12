@@ -6,6 +6,8 @@ import {
 } from 'react'
 import { ConfigContext } from './config'
 
+export const MOVE_SUFFIX = '_M'
+
 export const VersionContext = createContext()
 
 export function usePolishedCrystalService (config, version) {
@@ -35,6 +37,9 @@ class PolishedCrystalService {
   constructor (baseUrl, version) {
     this.baseUrl = baseUrl
     this.version = version
+
+    // cache
+    this.moves = {}
   }
 
   fetchVersions () {
@@ -65,14 +70,18 @@ class PolishedCrystalService {
           tmhmMoves,
         ] = await Promise.all([
           this.fillAbilityDescriptions(stat.abilities),
-          this.fetchBulkMoves(stat.movesByLevel.map((move) => move.id)),
-          this.fetchBulkMoves(stat.movesByTMHM.map((move) => move.id)),
+          this.getMoves(stat.movesByLevel.map((move) => move.id)),
+          this.getMoves(stat.movesByTMHM.map((move) => move.id)),
         ])
-        stat.movesByTMHM = Object.values(tmhmMoves)
+
         stat.abilities = faithFulAbilities
         stat.movesByLevel = stat.movesByLevel.map((move) => ({
-          level: move.level,
-          ...levelMoves[move.id],
+          ...move,
+          ...(levelMoves[move.id] ?? levelMoves[`${move.id}${MOVE_SUFFIX}`]),
+        }))
+        stat.movesByTMHM = stat.movesByTMHM.map((move) => ({
+          ...move,
+          ...(tmhmMoves[move.id] ?? tmhmMoves[`${move.id}${MOVE_SUFFIX}`]),
         }))
 
         if (stat.unfaithful?.abilities) {
@@ -80,7 +89,7 @@ class PolishedCrystalService {
             stat.unfaithful.abilities,
           )
         }
-        console.log('stat :', stat)
+
         return stat
       })
   }
@@ -95,11 +104,10 @@ class PolishedCrystalService {
 
     const abilitiesWithDescription = {}
     for (const [ slot, description ] of descriptions) {
-      abilitiesWithDescription[slot] = `${
-        abilities[slot]
-      } - ${
-        description
-      }`
+      abilitiesWithDescription[slot] = {
+        name: abilities[slot],
+        description: description,
+      }
     }
 
     return abilitiesWithDescription
@@ -121,6 +129,29 @@ class PolishedCrystalService {
 
     return fetch(`${this.baseUrl}/${this.version}/ability/${ability}`)
       .then((res) => res.json())
+  }
+
+  async getMoves (moves) {
+    const cached = {}
+    const fetches = []
+    let fetched
+
+    for (const id of moves) {
+      if (this.moves[id]) {
+        cached[id] = this.moves[id]
+      } else {
+        fetches.push(id)
+      }
+    }
+
+    if (fetches.length > 0) {
+      fetched = await this.fetchBulkMoves(fetches)
+    }
+
+    return {
+      ...cached,
+      ...fetched,
+    }
   }
 
   async fetchMoveList () {
@@ -150,6 +181,14 @@ class PolishedCrystalService {
 
     return fetch(`${this.baseUrl}/${this.version}/move/bulk${query}`)
       .then((res) => res.json())
+      .then((data) => {
+        this.moves = {
+          ...this.moves,
+          ...data,
+        }
+
+        return data
+      })
   }
 
   async fetchSpriteList () {

@@ -1,0 +1,19 @@
+dl.wrapper {
+  max-width: max-content;
+
+  & > dl.move {
+    text-align: left;
+    display: grid;
+    column-gap: 2rem;
+    grid-template-columns: minmax(0, max-content) minmax(0, max-content);
+
+    & > dt {
+      // font-weight: bold;
+      grid-column-start: 1;
+    }
+
+    & > dd {
+      grid-column-start: 2;
+    }
+  }
+}

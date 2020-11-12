@@ -1,5 +1,6 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+
+import { ChildrenShape } from '../utils/children-shape'
 
 export function AnchorToTab ({ children, ...props }) {
   return (
@@ -10,8 +11,5 @@ export function AnchorToTab ({ children, ...props }) {
 }
 
 AnchorToTab.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.element),
-    PropTypes.string,
-  ]),
+  children: ChildrenShape,
 }
