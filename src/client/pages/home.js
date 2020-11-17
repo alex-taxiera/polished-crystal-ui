@@ -1,7 +1,7 @@
 import React from 'react'
 import { Helmet } from 'react-helmet-async'
 
-import { AnchorToTab } from '../components/link/link'
+import { AnchorToTab } from '../components/link'
 
 import {
   Section,

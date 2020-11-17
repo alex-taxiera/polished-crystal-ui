@@ -6,7 +6,6 @@ import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { ChunkExtractor } from '@loadable/server'
-import queryString from 'query-string'
 
 import fetch from 'node-fetch'
 import config from 'config'
@@ -61,7 +60,7 @@ class App {
           context={context.router}
           location={{
             pathname: req.url,
-            search: queryString.stringify(req.query),
+            search: new URLSearchParams(req.query).toString(),
           }}
         >
           <ReactApp data={preData} />

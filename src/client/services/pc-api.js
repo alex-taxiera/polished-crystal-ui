@@ -75,7 +75,12 @@ class PolishedCrystalService {
         ])
 
         stat.abilities = faithFulAbilities
-        stat.movesByLevel = stat.movesByLevel.map((move) => ({
+        stat.movesByLevel = stat.movesByLevel.sort((a, b) => {
+          const a1 = a.evolution ? 1.5 : a.level
+          const b1 = b.evolution ? 1.5 : b.level
+
+          return a1 - b1
+        }).map((move) => ({
           ...move,
           ...(levelMoves[move.id] ?? levelMoves[`${move.id}${MOVE_SUFFIX}`]),
         }))
@@ -210,11 +215,15 @@ class PolishedCrystalService {
     }
 
     return this.validSprites
-      .then((sprites) => sprites
-        .filter((sprite) =>
-          sprite === pokemon ||
-          sprite.startsWith(`${pokemon}_`),
-        ))
+      .then((sprites) => {
+        const exact = sprites
+          .filter((sprite) => sprite === pokemon.toLowerCase())
+
+        return exact.length > 0
+          ? exact
+          : sprites
+            .filter((sprite) => sprite.startsWith(`${pokemon.toLowerCase()}_`))
+      })
       .then((relevantSprites) => relevantSprites.map((sprite) => `${
         this.baseUrl
       }/${

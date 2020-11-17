@@ -22,9 +22,11 @@ function sortSprites ({ name: a }, { name: b }) {
 }
 
 export function Sprites ({ sprites }) {
-  console.log('sprites :>> ', sprites);
   const [ loadedImages, setLoadedImages ] = useState(0)
-  const wrapperClass = cx(styles.wrapper, loadedImages < 2 && 'd-none')
+  const containerClass = cx(
+    'mx-2 my-1',
+    (loadedImages < sprites.length * 2) ? 'd-none' : undefined,
+  )
 
   return (
     <Section
@@ -36,23 +38,25 @@ export function Sprites ({ sprites }) {
           name: spriteName,
           urls: [ normal, shiny ],
         }, i) => (
-          <div key={`spritepair-${i}`} className="mx-2 my-1">
+          <div key={`spritepair-${i}`} className={containerClass}>
             {
               spriteName
                 ? <header><h6>{spriteName}</h6></header>
                 : undefined
             }
-            <div className={wrapperClass}>
+            <div className={styles.wrapper}>
               <div>
                 <img
                   src={normal}
                   onLoad={() => setLoadedImages(loadedImages + 1)}
+                  onDragStart={(e) => e.preventDefault()}
                 />
               </div>
               <div>
                 <img
                   src={shiny}
                   onLoad={() => setLoadedImages(loadedImages + 1)}
+                  onDragStart={(e) => e.preventDefault()}
                 />
               </div>
             </div>

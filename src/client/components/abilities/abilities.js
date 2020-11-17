@@ -8,24 +8,17 @@ import styles from './abilities.module.scss'
 export function Abilities ({ abilities }) {
   return (
     <Section title="Abilities" withBox="left" contentClass={styles.abilities}>
-      <div>
-        <div>
-          1:&nbsp;{abilities.one.name}&nbsp;-&nbsp;
-        </div>
-        <div>{abilities.one.description}</div>
-      </div>
-      <div>
-        <div>
-          2:&nbsp;{abilities.two.name}&nbsp;-&nbsp;
-        </div>
-        <div>{abilities.two.description}</div>
-      </div>
-      <div>
-        <div>
-          H:&nbsp;{abilities.hidden.name}&nbsp;-&nbsp;
-        </div>
-        <div>{abilities.hidden.description}</div>
-      </div>
+      <div>1:&nbsp;{abilities.one.name}</div>
+      <div>-</div>
+      <div>{abilities.one.description}</div>
+
+      <div>2:&nbsp;{abilities.two.name}</div>
+      <div>-</div>
+      <div>{abilities.two.description}</div>
+
+      <div>H:&nbsp;{abilities.hidden.name}</div>
+      <div>-</div>
+      <div>{abilities.hidden.description}</div>
     </Section>
   )
 }

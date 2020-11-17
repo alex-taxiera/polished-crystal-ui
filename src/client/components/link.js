@@ -3,12 +3,11 @@ import {
   Link as RouterLink,
 } from 'react-router-dom'
 
-import styles from './link.module.scss'
-import { ChildrenShape } from '../../utils/children-shape'
+import { ChildrenShape } from '../utils/children-shape'
 
 export function BasicLink ({ children, ...props }) {
   return (
-    <RouterLink className={styles.basic} {...props}>
+    <RouterLink {...props}>
       {children}
     </RouterLink>
   )

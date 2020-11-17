@@ -1,5 +1,5 @@
 import React from 'react'
-import { AnchorToTab } from '../components/anchor-to-tab'
+import { AnchorToTab } from '../components/link'
 
 export function Footer () {
   return (

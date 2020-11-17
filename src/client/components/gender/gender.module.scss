@@ -1,0 +1,6 @@
+.gender-grid {
+  display: grid;
+  column-gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, max-content));
+  max-width: max-content;
+}

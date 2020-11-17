@@ -10,7 +10,10 @@ import {
 import PropTypes from 'prop-types'
 import { Helmet } from 'react-helmet-async'
 
-import { Link } from '../components/link/link'
+import {
+  BasicLink,
+  Link,
+} from '../components/link'
 import {
   Section,
   SectionContainer,
@@ -25,6 +28,7 @@ import { PokeballSpinner } from '../components/pokeball-spinner/pokeball'
 
 import { Abilities } from '../components/abilities/abilities'
 import { MoveTable } from '../components/move-table/move-table'
+import { Gender } from '../components/gender/gender'
 
 export default function Pokemon () {
   const params = useParams()
@@ -105,8 +109,8 @@ function PokemonStats ({ id }) {
   const [ isLoading, setIsLoading ] = useState(true)
   const [ stat, setStat ] = useState()
   const [ data, setData ] = useState()
-  const [ normalSprites, setNormalSprits ] = useState()
-  const [ shinySprites, setShinySprits ] = useState()
+  const [ normalSprites, setNormalSprites ] = useState()
+  const [ shinySprites, setShinySprites ] = useState()
   const [ faithful, setFaithful ] = useState(false)
 
   useEffect(() => {
@@ -115,8 +119,8 @@ function PokemonStats ({ id }) {
     }
 
     setStat(undefined)
-    setNormalSprits(undefined)
-    setShinySprits(undefined)
+    setNormalSprites(undefined)
+    setShinySprites(undefined)
     setData(undefined)
     setIsLoading(true)
 
@@ -128,8 +132,8 @@ function PokemonStats ({ id }) {
       batchUpdate(() => {
         setIsLoading(false)
         setStat(data)
-        setNormalSprits(normalSprites)
-        setShinySprits(shinySprites)
+        setNormalSprites(normalSprites)
+        setShinySprites(shinySprites)
         setData(formatStat(data))
       })
     })
@@ -157,8 +161,6 @@ function PokemonStats ({ id }) {
       urls: [ normalSprites[i], shinySprites[i] ],
     })
   }
-
-  console.log('data :>> ', data);
 
   return (
     <>
@@ -213,35 +215,17 @@ function PokemonStats ({ id }) {
             ))
           }
         </Section>
-        <Section
-          title="Gender"
-          withBox={!data.gender.genderless ? 'right' : undefined}
-        >
-          {
-            data.gender.genderless ? (
-              <>
-                Genderless
-              </>
-            ) : (
-              <>
-                <div>
-                  Male: {data.gender.male}%
-                </div>
-                <div>
-                  Female: {data.gender.female}%
-                </div>
-              </>
-            )
-          }
-        </Section>
+        <Gender gender={data.gender} />
         <Section title="Evolutions">
           {
             data.evolutions.length === 0
               ? <div>None</div>
               : data.evolutions.map((evo, i) => (
-                <div key={`evo-${i}`}>
-                  {`${evo.to.displayName}: ${evo.type} ${evo.requirement}`}
-                </div>
+                <p key={`evo-${i}`} className="m-0">
+                  <BasicLink to={`/pokemon/${evo.to.id.toLowerCase()}`}>
+                    {evo.to.displayName}
+                  </BasicLink>:&nbsp;{evo.type}&nbsp;{evo.requirement}
+                </p>
               ))
           }
         </Section>

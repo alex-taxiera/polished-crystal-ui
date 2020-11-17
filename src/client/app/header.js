@@ -3,7 +3,7 @@ import React from 'react'
 import {
   Link,
   BasicLink,
-} from '../components/link/link'
+} from '../components/link'
 import { VersionSelect } from '../components/api-version-select'
 
 import styles from './header.module.scss'
