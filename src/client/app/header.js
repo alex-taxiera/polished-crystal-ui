@@ -1,8 +1,10 @@
 import React from 'react'
+import {
+  NavLink as RouterLink,
+} from 'react-router-dom'
 
 import {
-  Link,
-  BasicLink,
+  NavLink,
 } from '../components/link'
 import { VersionSelect } from '../components/api-version-select'
 
@@ -13,18 +15,18 @@ export function Header () {
     <header className="m-2 position-relative">
       <div className="d-flex justify-content-center">
         <h1>
-          <BasicLink to="/">
+          <RouterLink className="no-decorate" to="/">
             Polished Crystal Data
-          </BasicLink>
+          </RouterLink>
         </h1>
       </div>
       <div className="d-flex justify-content-center">
-        <Link to="/">
+        <NavLink to="/">
           Home
-        </Link>
-        <Link to="/pokemon">
+        </NavLink>
+        <NavLink to="/pokemon">
           Pokémon
-        </Link>
+        </NavLink>
       </div>
       <div className={styles['version-selector']}>
         <VersionSelect />

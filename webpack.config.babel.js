@@ -7,12 +7,13 @@ import WebpackPwaManifest from 'webpack-pwa-manifest'
 
 import manifest from './manifest'
 
-const DIST_PATH = path.resolve(__dirname, 'public/dist')
-const production = process.env.NODE_ENV === 'production'
+const PRODUCTION = process.env.NODE_ENV === 'production'
+const BUILD_PATH = path.resolve(__dirname, 'build')
+const DIST_PATH = path.resolve(__dirname, 'dist')
 
 const getConfig = (target) => ({
   name: target,
-  mode: production ? 'production' : 'development',
+  mode: PRODUCTION ? 'production' : 'development',
   target,
   entry: `./src/client/main-${target}.js`,
   module: {
@@ -33,7 +34,7 @@ const getConfig = (target) => ({
           {
             loader: 'file-loader',
             options: {
-              name: production ? '[contenthash:8].[ext]' : '[path][name].[ext]',
+              name: PRODUCTION ? '[contenthash:8].[ext]' : '[path][name].[ext]',
             },
           },
         ],
@@ -48,19 +49,19 @@ const getConfig = (target) => ({
             loader: 'css-loader',
             options: {
               importLoaders: 2,
-              sourceMap: !production,
+              sourceMap: !PRODUCTION,
             },
           },
           {
             loader: 'postcss-loader',
             options: {
-              sourceMap: !production,
+              sourceMap: !PRODUCTION,
             },
           },
           {
             loader: 'sass-loader',
             options: {
-              sourceMap: !production,
+              sourceMap: !PRODUCTION,
               sassOptions: {
                 includePaths: [
                   path.join(__dirname, 'src/client/styles'),
@@ -76,15 +77,15 @@ const getConfig = (target) => ({
     target === 'node' ? [ '@loadable/component', nodeExternals() ] : undefined,
   output: {
     path: path.join(DIST_PATH, target),
-    filename: production ? '[chunkhash:8].js' : '[name].[chunkhash:8].js',
+    filename: PRODUCTION ? '[chunkhash:8].js' : '[name].[chunkhash:8].js',
     publicPath: `/dist/${target}/`,
     libraryTarget: target === 'node' ? 'commonjs2' : undefined,
   },
-  devtool: 'source-map',
+  devtool: PRODUCTION ? '' : 'source-map',
   plugins: [
     new LoadablePlugin(),
     new MiniCssExtractPlugin({
-      filename: production
+      filename: PRODUCTION
         ? '[contenthash:8].css'
         : '[name].[contenthash:8].css',
     }),
@@ -92,7 +93,13 @@ const getConfig = (target) => ({
     new CopyPlugin({
       patterns: [
         { from: './src/public', to: DIST_PATH },
-      ],
+      ].concat(
+        PRODUCTION
+          ? [
+            { from: './config', to: path.join(BUILD_PATH, 'config') },
+          ]
+          : [],
+      ),
     }),
   ],
 })

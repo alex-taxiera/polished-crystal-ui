@@ -58,8 +58,8 @@ typings/
 .next
 
 # client files
-public/dist
-lib
+dist
+build
 .DS_Store
 
 # local

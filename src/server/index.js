@@ -6,22 +6,19 @@ import config from 'config'
 import { dynamicServe } from './utils/dynamic-serve.js'
 import * as reactApp from './controllers/app.js'
 
-const PRODUCTION = config.has('NODE_ENV') &&
-  config.get('NODE_ENV') === 'production'
+const PRODUCTION = process.env.NODE_ENV === 'production'
 
 const app = new helica.Server({
   debug: !PRODUCTION,
   sslApp: false,
 })
 
-const distPath = resolve(__dirname, '../../public/dist')
-
 // Serve static files
 if (PRODUCTION) {
-  app.serveStatic(distPath, '/dist')
+  app.serveStatic(resolve(__dirname, '../../dist'), '/dist')
 } else {
   // for "hot reloading"
-  dynamicServe(app, distPath, '/dist')
+  dynamicServe(app, resolve(__dirname, '../../dist'), '/dist')
 }
 // App and custom redirecting
 reactApp.loadRoute(app, '**')

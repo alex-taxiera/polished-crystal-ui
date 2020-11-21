@@ -1,34 +1,40 @@
 import React, {
+  useContext,
   useEffect,
   useState,
 } from 'react'
 import { unstable_batchedUpdates as batchUpdate } from 'react-dom'
 import {
+  NavLink as RouterLink,
   useHistory,
   useParams,
 } from 'react-router-dom'
 import PropTypes from 'prop-types'
-import { Helmet } from 'react-helmet-async'
 
 import {
-  BasicLink,
-  Link,
+  NavLink,
 } from '../components/link'
 import {
   Section,
   SectionContainer,
 } from '../components/sections/section'
 import { Sprites } from '../components/sprites/sprites'
+import { PokeballSpinner } from '../components/pokeball-spinner/pokeball'
+import { Abilities } from '../components/abilities/abilities'
+import { MoveTable } from '../components/move-table/move-table'
+import { Gender } from '../components/gender/gender'
+import { SEO } from '../components/seo'
+
 import {
+  formatStat,
+} from '../utils/format-stat'
+
+import {
+  PrefetchedContext,
   usePolishedCrystalService,
 } from '../services/pc-api'
 
 import SteelixImg from '../../assets/steelix.png'
-import { PokeballSpinner } from '../components/pokeball-spinner/pokeball'
-
-import { Abilities } from '../components/abilities/abilities'
-import { MoveTable } from '../components/move-table/move-table'
-import { Gender } from '../components/gender/gender'
 
 export default function Pokemon () {
   const params = useParams()
@@ -36,11 +42,7 @@ export default function Pokemon () {
 
   return (
     <>
-      <Helmet>
-        <title>
-          Pokémon
-        </title>
-      </Helmet>
+      <SEO title="Pokémon" />
       <PokemonList id={id} />
       {
         id
@@ -49,47 +51,18 @@ export default function Pokemon () {
             <Section contentClass="py-4">
               <p className="lead">
                 Try selecting a Pokémon from the dropdown!
-                <br />
-                <Link to="/pokemon/steelix">
-                  Steelix perhaps?
-                  <br />
-                  <br />
-                  <img src={SteelixImg} />
-                </Link>
               </p>
+              <p className="lead">
+                <NavLink to="/pokemon/steelix">
+                  Steelix perhaps?
+                </NavLink>
+              </p>
+              <img src={SteelixImg} />
             </Section>
           )
       }
     </>
   )
-}
-
-function pickStat (data, key, faithful = false) {
-  const unfaithful = data.unfaithful ?? {}
-  return (!faithful && unfaithful[key]) || data[key]
-}
-
-function formatStat (data, faithful = false) {
-  return {
-    ...data,
-    types: pickStat(data, 'types', faithful),
-    abilities: pickStat(data, 'abilities', faithful),
-    evolutions: pickStat(data, 'evolutions', faithful),
-    heldItems: pickStat(data, 'heldItems', faithful),
-    gender: pickStat(data, 'gender', faithful),
-    baseExp: pickStat(data, 'baseExp', faithful),
-    catchRate: pickStat(data, 'catchRate', faithful),
-    eggGroups: pickStat(data, 'eggGroups', faithful),
-    hatchCycles: pickStat(data, 'hatchCycles', faithful),
-    growthRate: pickStat(data, 'growthRate', faithful),
-    baseStats: pickStat(data, 'baseStats', faithful),
-    evYield: pickStat(data, 'evYield', faithful),
-    movesByLevel: data.movesByLevel
-      .concat((!faithful && data.unfaithful?.movesByLevel) || [])
-      .sort((a, b) => a.level - b.level),
-    movesByTMHM: data.movesByTMHM
-      .concat((!faithful && data.unfaithful?.movesByTMHM) || []),
-  }
 }
 
 function StatBlock ({ stats, id }) {
@@ -105,70 +78,70 @@ function StatBlock ({ stats, id }) {
 }
 
 function PokemonStats ({ id }) {
+  const prefetched = useContext(PrefetchedContext)
   const pcService = usePolishedCrystalService()
-  const [ isLoading, setIsLoading ] = useState(true)
-  const [ stat, setStat ] = useState()
-  const [ data, setData ] = useState()
-  const [ normalSprites, setNormalSprites ] = useState()
-  const [ shinySprites, setShinySprites ] = useState()
+  const [ isLoading, setIsLoading ] = useState(prefetched == null)
+  const [ stat, setStat ] = useState(prefetched?.stat)
+  const [ sprites, setSprites ] = useState(prefetched?.sprites)
   const [ faithful, setFaithful ] = useState(false)
 
   useEffect(() => {
-    if (!pcService || !pcService.version) {
+    if (!pcService || !pcService.version || prefetched?.stat?.id === id) {
       return
     }
 
     setStat(undefined)
-    setNormalSprites(undefined)
-    setShinySprites(undefined)
-    setData(undefined)
+    setSprites(undefined)
     setIsLoading(true)
 
     Promise.all([
       pcService.fetchStat(id),
-      pcService.getSpriteRoute(id, { shiny: false, scale: 4 }),
-      pcService.getSpriteRoute(id, { shiny: true, scale: 4 }),
-    ]).then(([ data, normalSprites, shinySprites ]) => {
+      pcService.getSpriteNames(id),
+    ]).then(([ data, spriteNames ]) => {
       batchUpdate(() => {
         setIsLoading(false)
         setStat(data)
-        setNormalSprites(normalSprites)
-        setShinySprites(shinySprites)
-        setData(formatStat(data))
+        setSprites(spriteNames)
       })
     })
   }, [ id, pcService ])
-
-  useEffect(() => {
-    if (stat) {
-      setData(formatStat(stat, faithful))
-    }
-  }, [ faithful ])
 
   if (isLoading) {
     return (<PokeballSpinner />)
   }
 
-  const sprites = []
-  for (let i = 0; i < normalSprites.length; i++) {
-    const parts = normalSprites[i].split('_')
+  const data = formatStat(stat)
 
-    sprites.push({
-      name: (normalSprites.length > 1 && parts.length > 1)
-        ? parts[parts.length - 1].split('?')[0]
-          .replace(/\b(\w)/g, (k) => k.toUpperCase())
-        : undefined,
-      urls: [ normalSprites[i], shinySprites[i] ],
-    })
-  }
+  const spriteRoutes = sprites.map((sprite) => {
+    const nameParts = sprite.split('_')
+    const form = nameParts[nameParts.length - 1]
+    const name = nameParts.length < 2
+      ? undefined
+      : form.replace(/\b(\w)/g, (k) => k.toUpperCase())
+
+    return {
+      name,
+      urls: [
+        pcService.formatSpriteRoute(sprite, { shiny: false, scale: 4 }),
+        pcService.formatSpriteRoute(sprite, { shiny: true, scale: 4 }),
+      ],
+    }
+  })
+  // for (let i = 0; i < sprites.length; i++) {
+  //   const parts = sprites[i].split('_')
+
+  //   sprites.push({
+  //     name: (normalSprites.length > 1 && parts.length > 1)
+  //       ? parts[parts.length - 1].split('?')[0]
+  //         .replace(/\b(\w)/g, (k) => k.toUpperCase())
+  //       : undefined,
+  //     urls: [ normalSprites[i], shinySprites[i] ],
+  //   })
+  // }
 
   return (
     <>
-      <Helmet>
-        <title>
-          {data.displayName}
-        </title>
-      </Helmet>
+      <SEO title={data.displayName} image={spriteRoutes[0].urls[0]} />
       <div className="d-flex justify-content-between px-2">
         <h3>
           {data.displayName}
@@ -186,7 +159,7 @@ function PokemonStats ({ id }) {
           />
         </div>
       </div>
-      <Sprites sprites={sprites} />
+      <Sprites sprites={spriteRoutes} />
       <SectionContainer>
         <Section title="Types" withBox="left">
           {
@@ -222,9 +195,9 @@ function PokemonStats ({ id }) {
               ? <div>None</div>
               : data.evolutions.map((evo, i) => (
                 <p key={`evo-${i}`} className="m-0">
-                  <BasicLink to={`/pokemon/${evo.to.id.toLowerCase()}`}>
+                  <RouterLink to={`/pokemon/${evo.to.id.toLowerCase()}`}>
                     {evo.to.displayName}
-                  </BasicLink>:&nbsp;{evo.type}&nbsp;{evo.requirement}
+                  </RouterLink>:&nbsp;{evo.type}&nbsp;{evo.requirement}
                 </p>
               ))
           }

@@ -1,2 +1,5 @@
-!lib
-!public
+.*
+Dockerfile
+node_modules
+build
+dist

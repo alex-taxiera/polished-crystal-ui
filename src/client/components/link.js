@@ -1,19 +1,11 @@
 import React from 'react'
 import {
-  Link as RouterLink,
+  NavLink as RouterLink,
 } from 'react-router-dom'
 
 import { ChildrenShape } from '../utils/children-shape'
 
-export function BasicLink ({ children, ...props }) {
-  return (
-    <RouterLink {...props}>
-      {children}
-    </RouterLink>
-  )
-}
-
-export function Link ({ children, ...props }) {
+export function NavLink ({ children, ...props }) {
   return (
     <RouterLink className="p-1 mx-2" {...props}>
       {children}
@@ -29,6 +21,6 @@ export function AnchorToTab ({ children, ...props }) {
   )
 }
 
-BasicLink.propTypes = Link.propTypes = AnchorToTab.propTypes = {
+NavLink.propTypes = AnchorToTab.propTypes = {
   children: ChildrenShape,
 }

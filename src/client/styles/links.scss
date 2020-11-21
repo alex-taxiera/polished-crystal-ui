@@ -4,6 +4,10 @@ a,
 a:hover {
   color: inherit;
 
+  &.no-decorate {
+    text-decoration: none;
+  }
+
   p & {
     color: $primary;
   }

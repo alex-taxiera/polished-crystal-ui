@@ -6,12 +6,14 @@ import {
 const DESKTOP_BREAKPOINT = 768
 
 export function useIsMobile () {
-  const [ width, setWidth ] = useState(window?.innerWidth ?? 1000)
+  const win = (typeof window !== 'undefined' && window.document)
+    ? window : undefined
+  const [ width, setWidth ] = useState(win?.innerWidth ?? 1000)
   useEffect(() => {
-    const handleResize = () => setWidth(window?.innerWidth ?? 1000)
-    window?.addEventListener('resize', handleResize)
+    const handleResize = () => setWidth(win?.innerWidth ?? 1000)
+    win?.addEventListener('resize', handleResize)
     return () => {
-      window?.removeEventListener('resize', handleResize)
+      win?.removeEventListener('resize', handleResize)
     }
   }, [ width ])
 

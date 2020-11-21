@@ -9,6 +9,7 @@ import { ConfigContext } from './config'
 export const MOVE_SUFFIX = '_M'
 
 export const VersionContext = createContext()
+export const PrefetchedContext = createContext()
 
 export function usePolishedCrystalService (config, version) {
   const configContext = useContext(ConfigContext)
@@ -32,7 +33,7 @@ export function usePolishedCrystalService (config, version) {
   )
 }
 
-class PolishedCrystalService {
+export class PolishedCrystalService {
 
   constructor (baseUrl, version) {
     this.baseUrl = baseUrl
@@ -56,47 +57,52 @@ class PolishedCrystalService {
       .then((res) => res.json())
   }
 
-  async fetchStat (pokemon) {
+  async backFillStat (stat) {
+    const clone = JSON.parse(JSON.stringify(stat))
+    console.time('backfill')
+    const [
+      faithFulAbilities,
+      levelMoves,
+      tmhmMoves,
+    ] = await Promise.all([
+      this.fillAbilityDescriptions(clone.abilities),
+      this.getMoves(clone.movesByLevel.map((move) => move.id)),
+      this.getMoves(clone.movesByTMHM.map((move) => move.id)),
+    ])
+    console.timeEnd('backfill')
+
+    clone.abilities = faithFulAbilities
+    clone.movesByLevel = clone.movesByLevel.sort((a, b) => {
+      const a1 = a.evolution ? 1.5 : a.level
+      const b1 = b.evolution ? 1.5 : b.level
+
+      return a1 - b1
+    }).map((move) => ({
+      ...move,
+      ...(levelMoves[move.id] ?? levelMoves[`${move.id}${MOVE_SUFFIX}`]),
+    }))
+    clone.movesByTMHM = clone.movesByTMHM.map((move) => ({
+      ...move,
+      ...(tmhmMoves[move.id] ?? tmhmMoves[`${move.id}${MOVE_SUFFIX}`]),
+    }))
+
+    if (clone.unfaithful?.abilities) {
+      clone.unfaithful.abilities = await this.fillAbilityDescriptions(
+        clone.unfaithful.abilities,
+      )
+    }
+
+    return clone
+  }
+
+  async fetchStat (pokemon, fullData = true) {
     if (!this.version) {
       return
     }
 
     return fetch(`${this.baseUrl}/${this.version}/pokemon/stat/${pokemon}`)
       .then((res) => res.json())
-      .then(async (stat) => {
-        const [
-          faithFulAbilities,
-          levelMoves,
-          tmhmMoves,
-        ] = await Promise.all([
-          this.fillAbilityDescriptions(stat.abilities),
-          this.getMoves(stat.movesByLevel.map((move) => move.id)),
-          this.getMoves(stat.movesByTMHM.map((move) => move.id)),
-        ])
-
-        stat.abilities = faithFulAbilities
-        stat.movesByLevel = stat.movesByLevel.sort((a, b) => {
-          const a1 = a.evolution ? 1.5 : a.level
-          const b1 = b.evolution ? 1.5 : b.level
-
-          return a1 - b1
-        }).map((move) => ({
-          ...move,
-          ...(levelMoves[move.id] ?? levelMoves[`${move.id}${MOVE_SUFFIX}`]),
-        }))
-        stat.movesByTMHM = stat.movesByTMHM.map((move) => ({
-          ...move,
-          ...(tmhmMoves[move.id] ?? tmhmMoves[`${move.id}${MOVE_SUFFIX}`]),
-        }))
-
-        if (stat.unfaithful?.abilities) {
-          stat.unfaithful.abilities = await this.fillAbilityDescriptions(
-            stat.unfaithful.abilities,
-          )
-        }
-
-        return stat
-      })
+      .then(async (stat) => fullData ? this.backFillStat(stat) : stat)
   }
 
   async fillAbilityDescriptions (abilities) {
@@ -205,7 +211,21 @@ class PolishedCrystalService {
       .then((res) => res.json())
   }
 
-  async getSpriteRoute (pokemon, options = {}) {
+  formatSpriteRoute (spriteName, options = {}) {
+    return `${
+      this.baseUrl
+    }/${
+      this.version
+    }/pokemon/sprite/${
+      spriteName
+    }?shiny=${
+      options.shiny
+    }&scale=${
+      options.scale ?? 1
+    }`
+  }
+
+  async getSpriteNames (pokemon) {
     if (!this.version) {
       return
     }
@@ -224,17 +244,6 @@ class PolishedCrystalService {
           : sprites
             .filter((sprite) => sprite.startsWith(`${pokemon.toLowerCase()}_`))
       })
-      .then((relevantSprites) => relevantSprites.map((sprite) => `${
-        this.baseUrl
-      }/${
-        this.version
-      }/pokemon/sprite/${
-        sprite
-      }?shiny=${
-        options.shiny
-      }&scale=${
-        options.scale ?? 1
-      }`))
   }
 
 }

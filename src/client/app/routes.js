@@ -1,27 +1,37 @@
-import React from 'react'
 import {
-  Route,
-  Switch,
-} from 'react-router-dom'
+  renderRoutes,
+} from 'react-router-config'
 import loadable from '@loadable/component'
 
 // Pages must use default export for loadable
-const Home = loadable(() => import('../pages/home'))
-const Pokemon = loadable(() => import('../pages/pokemon'))
-const NotFound = loadable(() => import('../pages/not-found'))
+export const config = [
+  {
+    path: '/',
+    exact: true,
+    component: loadable(() => import('../pages/home')),
+  },
+  {
+    path: '/pokemon/:id?',
+    component: loadable(() => import('../pages/pokemon')),
+    prefetch: function ({ id }, pcService) {
+      console.time('fetch')
+      return Promise.all([
+        pcService.fetchStat(id, false),
+        pcService.getSpriteNames(id),
+      ]).then(([ data, spriteNames ]) => {
+        console.timeEnd('fetch')
+        return {
+          stat: data,
+          sprites: spriteNames,
+        }
+      })
+    },
+  },
+  {
+    component: loadable(() => import('../pages/not-found')),
+  },
+]
 
 export function Routes () {
-  return (
-    <Switch>
-      <Route exact path="/">
-        <Home />
-      </Route>
-      <Route path="/pokemon/:id?">
-        <Pokemon />
-      </Route>
-      <Route>
-        <NotFound />
-      </Route>
-    </Switch>
-  )
+  return renderRoutes(config)
 }
