@@ -3,13 +3,12 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { unstable_batchedUpdates as batchUpdate } from 'react-dom'
 import {
   NavLink as RouterLink,
   useHistory,
   useParams,
 } from 'react-router-dom'
-import PropTypes from 'prop-types'
+import { useObservable } from '@libreact/use-observable'
 
 import {
   NavLink,
@@ -26,41 +25,18 @@ import { Gender } from '../components/gender/gender'
 import { SEO } from '../components/seo'
 
 import {
-  formatStat,
-} from '../utils/format-stat'
-
-import {
-  PrefetchedContext,
   usePolishedCrystalService,
 } from '../services/pc-api'
 
 import SteelixImg from '../../assets/steelix.png'
+import { ConfigContext } from '../services/config'
 
 export default function Pokemon () {
-  const params = useParams()
-  const id = params.id
-
   return (
     <>
       <SEO title="Pokémon" />
-      <PokemonList id={id} />
-      {
-        id
-          ? (<PokemonStats id={id} />)
-          : (
-            <Section contentClass="py-4">
-              <p className="lead">
-                Try selecting a Pokémon from the dropdown!
-              </p>
-              <p className="lead">
-                <NavLink to="/pokemon/steelix">
-                  Steelix perhaps?
-                </NavLink>
-              </p>
-              <img src={SteelixImg} />
-            </Section>
-          )
-      }
+      <PokemonList />
+      <PokemonStats />
     </>
   )
 }
@@ -77,67 +53,56 @@ function StatBlock ({ stats, id }) {
     ))
 }
 
-function PokemonStats ({ id }) {
-  const prefetched = useContext(PrefetchedContext)
+function PokemonStats () {
+  const config = useContext(ConfigContext)
   const pcService = usePolishedCrystalService()
-  const [ isLoading, setIsLoading ] = useState(prefetched == null)
-  const [ stat, setStat ] = useState(prefetched?.stat)
-  const [ sprites, setSprites ] = useState(prefetched?.sprites)
+  const [ id ] = useObservable(pcService.statsStore.query.selectActiveId())
+  const [ stat ] = useObservable(pcService.statsStore.query.selectActive())
+  const [ sprites ] = useObservable(pcService.spritesStore.query.selectAll())
   const [ faithful, setFaithful ] = useState(false)
 
-  useEffect(() => {
-    if (!pcService || !pcService.version || prefetched?.stat?.id === id) {
+  const missingData = !stat || !sprites.length
+  const needsBackfill = !stat?.complete && !config.isServer
+
+  useEffect(async () => {
+    if (!id) {
       return
     }
 
-    setStat(undefined)
-    setSprites(undefined)
-    setIsLoading(true)
+    if (missingData || needsBackfill) {
+      const reqs = []
+      if (!stat || needsBackfill) {
+        reqs.push(pcService.fetchStat(id).toPromise())
+      }
 
-    Promise.all([
-      pcService.fetchStat(id),
-      pcService.getSpriteNames(id),
-    ]).then(([ data, spriteNames ]) => {
-      batchUpdate(() => {
-        setIsLoading(false)
-        setStat(data)
-        setSprites(spriteNames)
-      })
-    })
-  }, [ id, pcService ])
+      if (!sprites.length) {
+        reqs.push(pcService.fetchSpriteList().toPromise())
+      }
+      Promise.all(reqs)
+    }
+  }, [ id ])
 
-  if (isLoading) {
+  if (!id) {
+    return (
+      <Section contentClass="py-4">
+        <p className="lead">
+          Try selecting a Pokémon from the dropdown!
+        </p>
+        <p className="lead">
+          <NavLink to="/pokemon/steelix">
+            Steelix perhaps?
+          </NavLink>
+        </p>
+        <img src={SteelixImg} />
+      </Section>
+    )
+  }
+  if (missingData) {
     return (<PokeballSpinner />)
   }
 
-  const data = formatStat(stat)
-
-  const spriteRoutes = sprites.map((sprite) => {
-    const nameParts = sprite.split('_')
-    const form = nameParts[nameParts.length - 1]
-    const name = nameParts.length < 2
-      ? undefined
-      : form.replace(/\b(\w)/g, (k) => k.toUpperCase())
-
-    return {
-      name,
-      urls: [
-        pcService.formatSpriteRoute(sprite, { shiny: false, scale: 4 }),
-        pcService.formatSpriteRoute(sprite, { shiny: true, scale: 4 }),
-      ],
-    }
-  })
-  // for (let i = 0; i < sprites.length; i++) {
-  //   const parts = sprites[i].split('_')
-
-  //   sprites.push({
-  //     name: (normalSprites.length > 1 && parts.length > 1)
-  //       ? parts[parts.length - 1].split('?')[0]
-  //         .replace(/\b(\w)/g, (k) => k.toUpperCase())
-  //       : undefined,
-  //     urls: [ normalSprites[i], shinySprites[i] ],
-  //   })
-  // }
+  const data = formatStat(stat, faithful)
+  const spriteRoutes = pcService.getSpritesForPokemon(sprites, stat.id)
 
   return (
     <>
@@ -221,7 +186,11 @@ function PokemonStats ({ id }) {
           </Section>
         </SectionContainer>
       </SectionContainer>
-      <Abilities abilities={data.abilities} />
+      {
+        stat.complete
+          ? <Abilities abilities={data.abilities} />
+          : <PokeballSpinner />
+      }
       <SectionContainer>
         <Section
           title="Base Stats"
@@ -236,29 +205,36 @@ function PokemonStats ({ id }) {
           <StatBlock id="ev" stats={data.evYield} />
         </Section>
       </SectionContainer>
-      <Section
-        title="Level Up Moves"
-        contentClass="d-flex justify-content-center"
-      >
-        <MoveTable moves={data.movesByLevel} />
-      </Section>
-      <Section
-        title="TM/HM Moves"
-        contentClass="d-flex justify-content-center"
-      >
-        <MoveTable moves={data.movesByTMHM} tmhm={true} />
-      </Section>
+      {
+        stat.complete
+          ? (
+            <>
+              <Section
+                title="Level Up Moves"
+                contentClass="d-flex justify-content-center"
+              >
+                <MoveTable moves={data.movesByLevel} />
+              </Section>
+              <Section
+                title="TM/HM Moves"
+                contentClass="d-flex justify-content-center"
+              >
+                <MoveTable moves={data.movesByTMHM} tmhm={true} />
+              </Section>
+            </>
+          ) : <PokeballSpinner />
+      }
     </>
   )
 }
 
-PokemonStats.propTypes = {
-  id: PropTypes.string.isRequired,
-}
-
-function PokemonList ({ id = '' }) {
+function PokemonList () {
+  const params = useParams()
   const pcService = usePolishedCrystalService()
-
+  pcService.statsStore.data.setActive(params.id)
+  const [ activeId ] = useObservable(
+    pcService.statsStore.query.selectActiveId(),
+  )
   const [ list, setList ] = useState()
   const history = useHistory()
 
@@ -279,7 +255,7 @@ function PokemonList ({ id = '' }) {
   return (
     <div className="d-flex justify-content-end px-2">
       <select
-        value={id.toLowerCase()}
+        value={activeId?.toLowerCase()}
         onChange={
           (event) => history
             .push(`/pokemon/${event.target.value.toLowerCase()}`)
@@ -294,6 +270,37 @@ function PokemonList ({ id = '' }) {
   )
 }
 
-PokemonList.propTypes = {
-  id: PropTypes.string,
+function pickStat (data, key, faithful = false) {
+  const unfaithful = data.unfaithful ?? {}
+  return (!faithful && unfaithful[key]) || data[key]
+}
+
+function formatStat (data, faithful = false) {
+  return {
+    ...data,
+    types: pickStat(data, 'types', faithful),
+    abilities: pickStat(data, 'abilities', faithful),
+    evolutions: pickStat(data, 'evolutions', faithful),
+    heldItems: pickStat(data, 'heldItems', faithful),
+    gender: pickStat(data, 'gender', faithful),
+    baseExp: pickStat(data, 'baseExp', faithful),
+    catchRate: pickStat(data, 'catchRate', faithful),
+    eggGroups: pickStat(data, 'eggGroups', faithful),
+    hatchCycles: pickStat(data, 'hatchCycles', faithful),
+    growthRate: pickStat(data, 'growthRate', faithful),
+    baseStats: pickStat(data, 'baseStats', faithful),
+    evYield: pickStat(data, 'evYield', faithful),
+    movesByLevel: data.movesByLevel
+      .concat((!faithful && data.unfaithful?.movesByLevel) || [])
+      .sort(sortLevelMoves),
+    movesByTMHM: data.movesByTMHM
+      .concat((!faithful && data.unfaithful?.movesByTMHM) || []),
+  }
+}
+
+function sortLevelMoves (a, b) {
+  const a1 = a.evolution ? 1.5 : a.level
+  const b1 = b.evolution ? 1.5 : b.level
+
+  return a1 - b1
 }

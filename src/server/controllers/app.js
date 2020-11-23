@@ -17,8 +17,6 @@ import serialize from 'serialize-javascript'
 import helica from 'helica'
 
 import { routeLoader } from '../utils/route-loader'
-import { config as routes } from '../../client/app/routes'
-import { PolishedCrystalService } from '../../client/services/pc-api'
 
 const basePath = resolve(__dirname, '../../../dist/')
 const nodePath = join(basePath, 'node')
@@ -50,22 +48,34 @@ class App {
     const versions = await fetch(
       `${webConfig.pcApiUrl}/polished-crystal/versions`,
     ).then((res) => res.json())
-
-    const pcService = new PolishedCrystalService(
-      config.get('pcApiUrlServer'),
-      versions[0],
-    )
-
     const data = await Promise.all(
-      matchRoutes(routes, req.url)
-        .map(({ route, match }) => route.prefetch(match.params, pcService)),
+      matchRoutes(ReactApp.routes, req.url).map(
+        ({ route, match }) => route.prefetch?.(
+          match.params,
+          {
+            version: versions[0],
+            url: config.get('pcApiUrlServer'),
+          },
+        ),
+      ),
     )
 
     const preData = {
       manifest,
       config: webConfig,
       versions,
-      prefetched: data.reduce((ax, dx) => ({ ...ax, ...dx })),
+      stores: data.filter((x) => x).flat().reduce((ax, dx) => {
+        ax[dx.storeName] = Object.values(dx.getValue().entities)
+        return ax
+      }, {}),
+    }
+
+    const serverData = {
+      ...preData,
+      config: {
+        ...preData.config,
+        isServer: true,
+      },
     }
     const context = {
       helmet: {},
@@ -80,7 +90,7 @@ class App {
             search: new URLSearchParams(req.query).toString(),
           }}
         >
-          <ReactApp data={preData} />
+          <ReactApp data={serverData} />
         </StaticRouter>
       </HelmetProvider>,
     )

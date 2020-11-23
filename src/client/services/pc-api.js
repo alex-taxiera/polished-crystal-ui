@@ -1,9 +1,21 @@
 import fetch from 'node-fetch'
+import { cacheable } from '@datorama/akita'
 import {
   createContext,
   useContext,
   useMemo,
 } from 'react'
+import {
+  of,
+  from,
+} from 'rxjs'
+import {
+  tap,
+} from 'rxjs/operators'
+
+import * as statsStore from '../store/stat/stat.store'
+import * as spritesStore from '../store/sprite.store'
+
 import { ConfigContext } from './config'
 
 export const MOVE_SUFFIX = '_M'
@@ -12,10 +24,12 @@ export const VersionContext = createContext()
 export const PrefetchedContext = createContext()
 
 export function usePolishedCrystalService (config, version) {
+  const stores = useContext(PrefetchedContext)
   const configContext = useContext(ConfigContext)
   const versionContext = useContext(VersionContext)
 
   const baseUrl = config?.pcApiUrl ?? configContext?.pcApiUrl
+  const isServer = config?.isServer ?? configContext?.isServer
   const currentVersion = version?.current ?? versionContext?.current
 
   return useMemo(
@@ -27,22 +41,32 @@ export function usePolishedCrystalService (config, version) {
       return new PolishedCrystalService(
         baseUrl,
         currentVersion,
+        isServer ? undefined : stores,
       )
     },
-    [ baseUrl, currentVersion ],
+    [ baseUrl, currentVersion, stores ],
   )
 }
 
 export class PolishedCrystalService {
 
-  constructor (baseUrl, version) {
+  constructor (baseUrl, version, stores = {}) {
     this.baseUrl = baseUrl
     this.version = version
 
     // cache
     this.moves = {}
+    this.statsStore = statsStore.createStore(
+      this.version,
+      stores[statsStore.storeName],
+    )
+    this.spritesStore = spritesStore.createStore(
+      this.version,
+      stores[spritesStore.storeName],
+    )
   }
 
+  // TODO: add version store
   fetchVersions () {
     return fetch(`${this.baseUrl}/polished-crystal/versions`)
       .then(async (res) => res.json())
@@ -58,51 +82,69 @@ export class PolishedCrystalService {
   }
 
   async backFillStat (stat) {
-    const clone = JSON.parse(JSON.stringify(stat))
     console.time('backfill')
+    const clone = JSON.parse(JSON.stringify(stat))
+    const movesToFetch = [
+      ...new Set(
+        [
+          ...clone.movesByLevel,
+          ...clone.movesByTMHM,
+          ...clone.unfaithful?.movesByLevel ?? [],
+          ...clone.unfaithful?.movesByTMHM ?? [],
+        ].map((move) => move.id),
+      ),
+    ]
+
     const [
       faithFulAbilities,
-      levelMoves,
-      tmhmMoves,
+      moves,
     ] = await Promise.all([
       this.fillAbilityDescriptions(clone.abilities),
-      this.getMoves(clone.movesByLevel.map((move) => move.id)),
-      this.getMoves(clone.movesByTMHM.map((move) => move.id)),
+      this.getMoves(movesToFetch),
     ])
-    console.timeEnd('backfill')
+
+    const fillMove = (move) => ({
+      ...move,
+      ...(moves[move.id] ?? moves[`${move.id}${MOVE_SUFFIX}`]),
+    })
 
     clone.abilities = faithFulAbilities
-    clone.movesByLevel = clone.movesByLevel.sort((a, b) => {
-      const a1 = a.evolution ? 1.5 : a.level
-      const b1 = b.evolution ? 1.5 : b.level
+    clone.movesByLevel = clone.movesByLevel.map(fillMove)
+    clone.movesByTMHM = clone.movesByTMHM.map(fillMove)
+    if (clone.unfaithful) {
+      clone.unfaithful.movesByLevel =
+        clone.unfaithful.movesByLevel?.map(fillMove)
 
-      return a1 - b1
-    }).map((move) => ({
-      ...move,
-      ...(levelMoves[move.id] ?? levelMoves[`${move.id}${MOVE_SUFFIX}`]),
-    }))
-    clone.movesByTMHM = clone.movesByTMHM.map((move) => ({
-      ...move,
-      ...(tmhmMoves[move.id] ?? tmhmMoves[`${move.id}${MOVE_SUFFIX}`]),
-    }))
+      clone.unfaithful.movesByTMHM =
+        clone.unfaithful.movesByTMHM?.map(fillMove)
+    }
 
     if (clone.unfaithful?.abilities) {
       clone.unfaithful.abilities = await this.fillAbilityDescriptions(
         clone.unfaithful.abilities,
       )
     }
-
+    console.timeEnd('backfill')
     return clone
   }
 
-  async fetchStat (pokemon, fullData = true) {
+  fetchStat (pokemon, fullData = true) {
     if (!this.version) {
-      return
+      return of(undefined)
     }
 
-    return fetch(`${this.baseUrl}/${this.version}/pokemon/stat/${pokemon}`)
-      .then((res) => res.json())
-      .then(async (stat) => fullData ? this.backFillStat(stat) : stat)
+    const req = from(
+      fetch(`${this.baseUrl}/${this.version}/pokemon/stat/${pokemon}`)
+        .then((res) => res.json())
+        .then(async (stat) => fullData ? this.backFillStat(stat) : stat),
+    ).pipe(
+      tap((stat) => this.statsStore.data.upsert(stat.id, {
+        ...stat,
+        complete: fullData,
+      })),
+    )
+
+    return req
   }
 
   async fillAbilityDescriptions (abilities) {
@@ -124,6 +166,7 @@ export class PolishedCrystalService {
     return abilitiesWithDescription
   }
 
+  // TODO: add ability store
   async fetchAbilityList () {
     if (!this.version) {
       return
@@ -142,6 +185,7 @@ export class PolishedCrystalService {
       .then((res) => res.json())
   }
 
+  // TODO: add move akita store
   async getMoves (moves) {
     const cached = {}
     const fetches = []
@@ -202,13 +246,19 @@ export class PolishedCrystalService {
       })
   }
 
-  async fetchSpriteList () {
+  fetchSpriteList () {
     if (!this.version) {
-      return
+      return of(undefined)
     }
 
-    return fetch(`${this.baseUrl}/${this.version}/pokemon/sprite`)
-      .then((res) => res.json())
+    const req = from(
+      fetch(`${this.baseUrl}/${this.version}/pokemon/sprite`)
+        .then((res) => res.json()),
+    ).pipe(
+      tap((list) => this.spritesStore.data.add(list.map((id) => ({ id })))),
+    )
+
+    return cacheable(this.spritesStore.data, req)
   }
 
   formatSpriteRoute (spriteName, options = {}) {
@@ -225,25 +275,33 @@ export class PolishedCrystalService {
     }`
   }
 
-  async getSpriteNames (pokemon) {
-    if (!this.version) {
-      return
-    }
+  // TODO: remove this from service
+  getSpritesForPokemon (sprites, pokemon) {
+    const exact = sprites
+      .filter(({ id: sprite }) => sprite === pokemon.toLowerCase())
+    const relevantSprites = exact.length > 0
+      ? exact
+      : sprites.filter(
+        ({ id: sprite }) => sprite.startsWith(`${pokemon.toLowerCase()}_`),
+      )
 
-    if (!this.validSprites) {
-      this.validSprites = this.fetchSpriteList()
-    }
+    const res = relevantSprites.map(({ id: sprite }) => {
+      const nameParts = sprite.split('_')
+      const form = nameParts.length < 2
+        ? undefined
+        : nameParts[nameParts.length - 1]
+          .replace(/\b(\w)/g, (k) => k.toUpperCase())
 
-    return this.validSprites
-      .then((sprites) => {
-        const exact = sprites
-          .filter((sprite) => sprite === pokemon.toLowerCase())
+      return {
+        form,
+        urls: [
+          this.formatSpriteRoute(sprite, { shiny: false, scale: 4 }),
+          this.formatSpriteRoute(sprite, { shiny: true, scale: 4 }),
+        ],
+      }
+    })
 
-        return exact.length > 0
-          ? exact
-          : sprites
-            .filter((sprite) => sprite.startsWith(`${pokemon.toLowerCase()}_`))
-      })
+    return res
   }
 
 }

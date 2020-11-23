@@ -16,7 +16,7 @@ const spriteWeight = {
   johto: 2,
 }
 
-function sortSprites ({ name: a }, { name: b }) {
+function sortSprites ({ form: a }, { form: b }) {
   return (spriteWeight[a.toLowerCase()] ?? Infinity) -
     (spriteWeight[b.toLowerCase()] ?? Infinity)
 }
@@ -35,13 +35,13 @@ export function Sprites ({ sprites }) {
     >
       {
         sprites.sort(sortSprites).map(({
-          name: spriteName,
+          form,
           urls: [ normal, shiny ],
         }, i) => (
           <div key={`spritepair-${i}`} className={containerClass}>
             {
-              spriteName
-                ? <header><h6>{spriteName}</h6></header>
+              form && sprites.length > 1
+                ? <header><h6>{form}</h6></header>
                 : undefined
             }
             <div className={styles.wrapper}>
@@ -69,7 +69,7 @@ export function Sprites ({ sprites }) {
 
 Sprites.propTypes = {
   sprites: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string,
+    form: PropTypes.string,
     urls: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
 }

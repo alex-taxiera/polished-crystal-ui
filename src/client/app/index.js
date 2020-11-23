@@ -7,7 +7,10 @@ import {
 
 import { Header } from './header'
 import { Footer } from './footer'
-import { Routes } from './routes'
+import {
+  Routes,
+  config as routeConfig,
+} from './routes'
 
 import { ConfigContext } from '../services/config'
 import {
@@ -28,7 +31,7 @@ export function App ({ data }) {
 
   return (
     <React.StrictMode>
-      <PrefetchedContext.Provider value={data.prefetched}>
+      <PrefetchedContext.Provider value={data.stores}>
         <ConfigContext.Provider value={data.config}>
           <VersionContext.Provider value={versionData}>
             <MainSEO manifest={data.manifest} />
@@ -43,6 +46,8 @@ export function App ({ data }) {
     </React.StrictMode>
   )
 }
+
+App.routes = routeConfig
 
 function MainSEO ({ manifest }) {
   return (

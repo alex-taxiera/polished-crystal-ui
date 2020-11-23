@@ -20,7 +20,7 @@ export default function MoveTableDesktop ({ moves, tmhm = false }) {
           <th>Power</th>
           <th>Accuracy</th>
           <th>PP</th>
-          <th>Effect Chance</th>
+          <th>Effect %</th>
         </tr>
       </thead>
       <tbody>

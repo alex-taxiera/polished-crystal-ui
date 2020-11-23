@@ -2,6 +2,7 @@ import {
   renderRoutes,
 } from 'react-router-config'
 import loadable from '@loadable/component'
+import { PolishedCrystalService } from '../services/pc-api'
 
 // Pages must use default export for loadable
 export const config = [
@@ -13,18 +14,16 @@ export const config = [
   {
     path: '/pokemon/:id?',
     component: loadable(() => import('../pages/pokemon')),
-    prefetch: function ({ id }, pcService) {
-      console.time('fetch')
-      return Promise.all([
-        pcService.fetchStat(id, false),
-        pcService.getSpriteNames(id),
-      ]).then(([ data, spriteNames ]) => {
-        console.timeEnd('fetch')
-        return {
-          stat: data,
-          sprites: spriteNames,
-        }
-      })
+    prefetch: function ({ id }, { version, url }) {
+      if (id) {
+        const pcService = new PolishedCrystalService(url, version)
+        return Promise.all([
+          pcService.fetchStat(id, false).toPromise()
+            .then(() => pcService.statsStore.data),
+          pcService.fetchSpriteList().toPromise()
+            .then(() => pcService.spritesStore.data),
+        ])
+      }
     },
   },
   {
