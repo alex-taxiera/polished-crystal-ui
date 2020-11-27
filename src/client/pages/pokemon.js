@@ -231,7 +231,7 @@ function PokemonStats () {
 function PokemonList () {
   const params = useParams()
   const pcService = usePolishedCrystalService()
-  pcService.statsStore.data.setActive(params.id)
+  pcService.statsStore.data.setActive(params.id ?? null)
   const [ activeId ] = useObservable(
     pcService.statsStore.query.selectActiveId(),
   )
@@ -255,7 +255,7 @@ function PokemonList () {
   return (
     <div className="d-flex justify-content-end px-2">
       <select
-        value={activeId?.toLowerCase()}
+        value={activeId?.toLowerCase() ?? ''}
         onChange={
           (event) => history
             .push(`/pokemon/${event.target.value.toLowerCase()}`)
