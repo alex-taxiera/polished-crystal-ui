@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.0.0-experimental
 
-FROM node:fermium-slim as builder
+# FROM node:fermium-slim as builder
 
 # COPY ./package*.json ./
 
@@ -47,7 +47,8 @@ RUN --mount=type=ssh npm i
 COPY . .
 
 RUN npm run build
-RUN cp -r dist build/dist
+
+RUN --mount=type=ssh npm ci --no-optional --only=prod
 
 # COPY --from=builder ./node_modules ./node_modules
 # COPY --from=builder ./build ./

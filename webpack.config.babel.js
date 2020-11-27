@@ -9,7 +9,9 @@ import manifest from './manifest'
 
 const PRODUCTION = process.env.NODE_ENV === 'production'
 const BUILD_PATH = path.resolve(__dirname, 'build')
-const DIST_PATH = path.resolve(__dirname, 'dist')
+const DIST_PATH = PRODUCTION
+  ? path.join(BUILD_PATH, 'dist')
+  : path.resolve(__dirname, 'dist')
 
 const getConfig = (target) => ({
   name: target,
