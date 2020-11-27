@@ -82,7 +82,6 @@ export class PolishedCrystalService {
   }
 
   async backFillStat (stat) {
-    console.time('backfill')
     const clone = JSON.parse(JSON.stringify(stat))
     const movesToFetch = [
       ...new Set(
@@ -124,7 +123,6 @@ export class PolishedCrystalService {
         clone.unfaithful.abilities,
       )
     }
-    console.timeEnd('backfill')
     return clone
   }
 

@@ -7,7 +7,7 @@ import { promises as fs } from 'fs'
 
 export function dynamicServe (app, filePath, baseRoute) {
   const fullPath = resolve(filePath)
-  const route = baseRoute ?? `/${fullPath.split('/').pop()}`
+  const route = baseRoute ?? ''
 
   app.addResource(`${route}/*`, buildController(fullPath, route))
 }

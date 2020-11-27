@@ -92,13 +92,13 @@ const getConfig = (target) => ({
     new WebpackPwaManifest(manifest),
     new CopyPlugin({
       patterns: [
-        { from: './src/public', to: DIST_PATH },
+        { from: './src/public', to: path.join(DIST_PATH, 'public') },
       ].concat(
-        PRODUCTION
-          ? [
-            { from: './config', to: path.join(BUILD_PATH, 'config') },
-          ]
-          : [],
+        PRODUCTION ? [
+          { from: './config', to: path.join(BUILD_PATH, 'config') },
+          { from: './src/server', to: path.join(BUILD_PATH, 'src/server') },
+          { from: './src/index.js', to: path.join(BUILD_PATH, 'src/index.js') },
+        ] : [],
       ),
     }),
   ],

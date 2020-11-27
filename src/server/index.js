@@ -16,9 +16,11 @@ const app = new helica.Server({
 // Serve static files
 if (PRODUCTION) {
   app.serveStatic(resolve(__dirname, '../../dist'), '/dist')
+  app.serveStatic(resolve(__dirname, '../../dist/public'))
 } else {
   // for "hot reloading"
   dynamicServe(app, resolve(__dirname, '../../dist'), '/dist')
+  dynamicServe(app, resolve(__dirname, '../../dist/public'))
 }
 // App and custom redirecting
 reactApp.loadRoute(app, '**')

@@ -2,31 +2,31 @@
 
 FROM node:fermium-slim as builder
 
-COPY ./package*.json ./
+# COPY ./package*.json ./
 
-RUN apt-get update -yq && \
-    apt-get install -yq --no-install-recommends \
-      git openssh-client && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get update -yq && \
+#     apt-get install -yq --no-install-recommends \
+#       git openssh-client && \
+#     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
-RUN --mount=type=ssh npm ci
+# RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
+# RUN --mount=type=ssh npm ci
 
-COPY . .
+# COPY . .
 
-RUN npm run build
+# RUN npm run build
 
-FROM node:fermium-slim AS installer
+# FROM node:fermium-slim AS installer
 
-COPY ./package*.json ./
+# COPY ./package*.json ./
 
-RUN apt-get update -yq && \
-    apt-get install -yq --no-install-recommends \
-      git openssh-client && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get update -yq && \
+#     apt-get install -yq --no-install-recommends \
+#       git openssh-client && \
+#     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
-RUN --mount=type=ssh npm ci --no-optional --only=prod
+# RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
+# RUN --mount=type=ssh npm ci --no-optional --only=prod
 
 FROM node:fermium-slim AS app
 
@@ -34,8 +34,23 @@ EXPOSE 3030
 
 WORKDIR /app
 
-COPY --from=installer ./node_modules ./node_modules
-COPY --from=builder ./build ./
-COPY --from=builder ./dist ./dist
+COPY ./package*.json ./
 
-CMD ["node", "lib/server/index.js"]
+RUN apt-get update -yq && \
+    apt-get install -yq --no-install-recommends \
+      git openssh-client && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
+RUN --mount=type=ssh npm i
+
+COPY . .
+
+RUN npm run build
+RUN cp -r dist build/dist
+
+# COPY --from=builder ./node_modules ./node_modules
+# COPY --from=builder ./build ./
+# COPY --from=builder ./dist ./dist
+
+CMD ["node", "build/src"]

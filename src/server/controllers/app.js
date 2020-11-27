@@ -54,7 +54,9 @@ class App {
           match.params,
           {
             version: versions[0],
-            url: config.get('pcApiUrlServer'),
+            url: config.has('pcApiServerUrl')
+              ? config.get('pcApiServerUrl')
+              : `http://${config.get('pcApiServerName')}:${config.get('pcApiServerPort')}`,
           },
         ),
       ),
@@ -135,18 +137,7 @@ class Manifest {
 
 }
 
-class Favicon {
-
-  get (res) {
-    helica.send(res, '', 302, {
-      Location: '/dist/favicon.ico',
-    })
-  }
-
-}
-
 export const loadRoute = routeLoader((app, basePath) => {
-  app.addResource('/favicon.ico', Favicon)
   app.addResource('/manifest.webmanifest', Manifest)
   app.addResource(basePath, App)
 })
