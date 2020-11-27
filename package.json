@@ -20,7 +20,7 @@
     "@loadable/component": "^5.14.1",
     "@loadable/server": "^5.14.0",
     "classnames": "^2.2.6",
-    "config": "^3.3.2",
+    "config": "^3.3.3",
     "helica": "github:moondrop/helica",
     "memoizee": "^0.4.14",
     "node-fetch": "^2.6.1",
