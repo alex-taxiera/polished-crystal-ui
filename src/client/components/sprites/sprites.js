@@ -22,10 +22,12 @@ function sortSprites ({ form: a }, { form: b }) {
 }
 
 export function Sprites ({ sprites }) {
-  const [ loadedImages, setLoadedImages ] = useState(0)
+  const loadedImages = sprites.map(() => [ useState(false), useState(false) ])
   const containerClass = cx(
     'mx-2 my-1',
-    (loadedImages < sprites.length * 2) ? 'd-none' : undefined,
+    loadedImages
+      .flat()
+      .some(([ isLoaded ]) => !isLoaded) ? 'd-none' : undefined,
   )
 
   return (
@@ -48,14 +50,14 @@ export function Sprites ({ sprites }) {
               <div>
                 <img
                   src={normal}
-                  onLoad={() => setLoadedImages(loadedImages + 1)}
+                  onLoad={() => loadedImages[i][0][1](true)}
                   onDragStart={(e) => e.preventDefault()}
                 />
               </div>
               <div>
                 <img
                   src={shiny}
-                  onLoad={() => setLoadedImages(loadedImages + 1)}
+                  onLoad={() => loadedImages[i][1][1](true)}
                   onDragStart={(e) => e.preventDefault()}
                 />
               </div>
