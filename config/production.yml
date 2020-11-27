@@ -1,2 +1,2 @@
 pcApiUrl: https://pc-api.taxiera.link
-pcApiUrlServer: pc-api
+pcApiUrlServer: http://pc-api:3000
