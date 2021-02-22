@@ -3,10 +3,12 @@ env:
 parserOptions:
   ecmaVersion: 2020
   sourceType: module
+settings:
+  react:
+    version: detect
 extends:
   - 'plugin:react/recommended'
   - '@alex-taxiera/eslint-config-esm'
-rules: {
-  'react/prop-types': ['warn'],
-  'no-console': ['warn']
-}
+rules:
+  react/prop-types:
+    - warn

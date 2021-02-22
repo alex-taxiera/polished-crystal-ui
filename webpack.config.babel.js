@@ -8,10 +8,7 @@ import WebpackPwaManifest from 'webpack-pwa-manifest'
 import manifest from './manifest'
 
 const PRODUCTION = process.env.NODE_ENV === 'production'
-const BUILD_PATH = path.resolve(__dirname, 'build')
-const DIST_PATH = PRODUCTION
-  ? path.join(BUILD_PATH, 'dist')
-  : path.resolve(__dirname, 'dist')
+const DIST_PATH = path.resolve(__dirname, 'dist')
 
 const getConfig = (target) => ({
   name: target,
@@ -31,7 +28,7 @@ const getConfig = (target) => ({
         },
       },
       {
-        test: /\.(png|svg|jpe?g|gif)$/,
+        test: /\.(png|jpe?g|gif)$/,
         use: [
           {
             loader: 'file-loader',
@@ -95,13 +92,7 @@ const getConfig = (target) => ({
     new CopyPlugin({
       patterns: [
         { from: './src/public', to: path.join(DIST_PATH, 'public') },
-      ].concat(
-        PRODUCTION ? [
-          { from: './config', to: path.join(BUILD_PATH, 'config') },
-          { from: './src/server', to: path.join(BUILD_PATH, 'src/server') },
-          { from: './src/index.js', to: path.join(BUILD_PATH, 'src/index.js') },
-        ] : [],
-      ),
+      ],
     }),
   ],
 })

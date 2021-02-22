@@ -1,4 +1,5 @@
 {
   "ignore": [],
-  "watch": ["src/server", "src/index.js"]
+  "watch": ["src/server", "src/index.js", "dist"],
+  "delay": 1000
 }
