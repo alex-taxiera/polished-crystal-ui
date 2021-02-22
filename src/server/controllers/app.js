@@ -11,8 +11,9 @@ import { matchRoutes } from 'react-router-config'
 import { HelmetProvider } from 'react-helmet-async'
 import { ChunkExtractor } from '@loadable/server'
 
+import cookie from 'cookie'
 import fetch from 'node-fetch'
-import config from 'config'
+import * as config from '../utils/config'
 import serialize from 'serialize-javascript'
 import helica from 'helica'
 
@@ -54,18 +55,26 @@ class App {
           match.params,
           {
             version: versions[0],
-            url: config.has('pcApiServerUrl')
-              ? config.get('pcApiServerUrl')
-              : `http://${config.get('pcApiServerName')}:${config.get('pcApiServerPort')}`,
+            url: config.get('pcApiServerName') != null
+              ? `http://${config.get('pcApiServerName')}${
+                config.get('pcApiServerPort') != null
+                  ? `:${config.get('pcApiServerPort')}`
+                  : ''
+              }` : config.get('pcApiServerUrl'),
           },
         ),
       ),
     )
 
+    const cookies = cookie.parse(
+      req.headers.find(({ name }) => name === 'cookie')?.value ?? '',
+    )
+
     const preData = {
+      cookies,
       manifest,
-      config: webConfig,
       versions,
+      config: webConfig,
       stores: data.filter((x) => x).flat().reduce((ax, dx) => {
         ax[dx.storeName] = Object.values(dx.getValue().entities)
         return ax
@@ -106,6 +115,16 @@ class App {
     const html = renderToString(jsx)
     const { helmet } = context.helmet
 
+    const bodyData = []
+
+    if (helmet.bodyAttributes.toString()) {
+      bodyData.push(helmet.bodyAttributes.toString())
+    }
+
+    if (preData.cookies.theme) {
+      bodyData.push(`data-theme="${preData.cookies.theme}"`)
+    }
+
     helica.render(res, `
       <!DOCTYPE html>
       <html ${helmet.htmlAttributes.toString()}>
@@ -116,7 +135,7 @@ class App {
           ${webExtractor.getLinkTags()}
           ${webExtractor.getStyleTags()}
         </head>
-        <body ${helmet.bodyAttributes.toString()}>
+        <body${bodyData.length > 0 ? ` ${bodyData.join(' ')}` : ''}>
           <div id="root">${html}</div>
           <script>window.__SERVER_DATA__ = ${serialize(preData)}</script>
           ${webExtractor.getScriptTags()}
