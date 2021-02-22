@@ -9,6 +9,6 @@ a:hover {
   }
 
   p & {
-    color: $primary;
+    color: var(--color-secondary);
   }
 }

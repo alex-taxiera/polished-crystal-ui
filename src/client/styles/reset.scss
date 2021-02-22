@@ -1,27 +1,47 @@
 @use './colors' as *;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 html,
 body,
 #root {
+  width: 100%;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 body {
-  background: $background;
-  color: $bunker;
+  // light theme (default)
+  --color-secondary: #{$secondary};
+  --color-background: #{$background};
+  --color-box: white;
+  --color-font: black;
+
+  &[data-theme="dark"] {
+    --color-secondary: #{$blue};
+    --color-background: #333;
+    --color-box: #444;
+    --color-font: white;
+
+    hr {
+      border-color: #888;
+    }
+  }
+
+  color: var(--color-font);
+  background: var(--color-background);
   display: flex;
   justify-content: center;
   text-align: center;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
 }
 
 #root {
   display: flex;
   flex-flow: column;
-  width: 1300px;
 }
 
 img {
@@ -30,6 +50,21 @@ img {
 
 label {
   user-select: none;
+  cursor: pointer;
+  margin: 0;
+}
+
+select,
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+select {
+  appearance: none;
+  border: none;
+  background: unset;
+  font-weight: unset;
+  color: inherit;
 }
 
 h1,
@@ -38,6 +73,10 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: bold;
-  display: contents;
+  margin: 0;
+}
+
+*:focus {
+  outline: none;
+  box-shadow: 0px 0px 10px 5px var(--color-secondary);
 }

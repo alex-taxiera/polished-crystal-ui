@@ -12,15 +12,13 @@ export default function Home () {
   return (
     <>
       <SEO title="Home" />
-      <Section contentClass="py-4">
-        <p className="lead">
-          This site is a rough data center made for&nbsp;
-          <AnchorToTab href="https://github.com/Rangi42/polishedcrystal#pok%C3%A9mon-polished-crystal">
-            Polished Crystal.
-          </AnchorToTab>
-        </p>
-        <img src={TitleImg} />
-      </Section>
+      <p className="lead">
+        This site is a rough data center made for&nbsp;
+        <AnchorToTab href="https://github.com/Rangi42/polishedcrystal#pok%C3%A9mon-polished-crystal">
+          Polished Crystal.
+        </AnchorToTab>
+      </p>
+      <img src={TitleImg} />
     </>
   )
 }

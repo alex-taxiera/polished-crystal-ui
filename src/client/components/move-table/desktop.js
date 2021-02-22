@@ -44,7 +44,11 @@ export default function MoveTableDesktop ({ moves, tmhm = false }) {
                     )
                 }
                 <td className="text-left" colSpan="2">
-                  {move.name}<br />{move.description}
+                  <span className={styles['move-name']}>
+                    {move.name}
+                  </span>
+                  <br />
+                  {move.description}
                 </td>
                 <td>{move.type}</td>
                 <td>{move.category}</td>

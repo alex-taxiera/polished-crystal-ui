@@ -1,0 +1,16 @@
+.select {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  label {
+    position: absolute;
+    z-index: -1;
+    right: 10px;
+    width: 0.5em;
+    height: 0.3em;
+    background-color: var(--color-font);
+    clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+    content: '';
+  }
+}

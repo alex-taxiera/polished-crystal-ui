@@ -3,6 +3,10 @@ $row-spacing: 1rem;
 table.moves {
   table-layout: fixed;
 
+  th {
+    font-weight: 500;
+  }
+
   & > tbody > tr {
     &:first-child > td {
       padding-top: $row-spacing;
@@ -12,4 +16,8 @@ table.moves {
       padding-bottom: $row-spacing;
     }
   }
+}
+
+.move-name {
+  font-weight: 500;
 }

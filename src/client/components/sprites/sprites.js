@@ -1,4 +1,5 @@
 import React, {
+  useRef,
   useState,
 } from 'react'
 import PropTypes from 'prop-types'
@@ -22,13 +23,11 @@ function sortSprites ({ form: a }, { form: b }) {
 }
 
 export function Sprites ({ sprites }) {
+  const refs = sprites.map(() => [ useRef(), useRef() ])
   const loadedImages = sprites.map(() => [ useState(false), useState(false) ])
-  const containerClass = cx(
-    'mx-2 my-1',
-    loadedImages
-      .flat()
-      .some(([ isLoaded ]) => !isLoaded) ? 'd-none' : undefined,
-  )
+  const isLoaded = refs.flat().every((ref) => ref.current?.complete) ||
+    loadedImages.flat().every(([ loaded ]) => loaded)
+  const containerClass = cx('mx-2 my-1', !isLoaded ? 'd-none' : undefined)
 
   return (
     <Section
@@ -49,6 +48,7 @@ export function Sprites ({ sprites }) {
             <div className={styles.wrapper}>
               <div>
                 <img
+                  ref={refs[i][0]}
                   src={normal}
                   onLoad={() => loadedImages[i][0][1](true)}
                   onDragStart={(e) => e.preventDefault()}
@@ -56,6 +56,7 @@ export function Sprites ({ sprites }) {
               </div>
               <div>
                 <img
+                  ref={refs[i][1]}
                   src={shiny}
                   onLoad={() => loadedImages[i][1][1](true)}
                   onDragStart={(e) => e.preventDefault()}

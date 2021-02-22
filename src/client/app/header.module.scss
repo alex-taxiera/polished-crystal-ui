@@ -1,6 +1,35 @@
+@use '../styles/colors' as *;
+
+.page-header {
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  background: $primary;
+  color: white;
+  fill: white;
+}
+
 .version-selector {
   display: none;
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.title {
+  display: flex;
+  flex: 1;
+  text-align: left;
+
+  & > h1 {
+    font-weight: normal;
+  }
+}
+
+.nav {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  column-gap: 2em;
 }

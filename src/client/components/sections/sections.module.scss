@@ -20,12 +20,20 @@
 }
 
 section.section {
-  background: $content;
+  background: var(--color-box);
 
   & > header {
-    color: white;
-    background: $primary;
+    // color: white;
+    // background: $primary;
     padding: 0.25rem 0.5rem;
+
+    & > h6 {
+      // font-weight: 500;
+    }
+  }
+
+  & > hr {
+    margin: 0 1rem;
   }
 
   & > main {

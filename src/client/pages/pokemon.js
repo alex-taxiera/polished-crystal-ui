@@ -4,15 +4,12 @@ import React, {
   useState,
 } from 'react'
 import {
-  NavLink as RouterLink,
+  NavLink,
   useHistory,
   useParams,
 } from 'react-router-dom'
 import { useObservable } from '@libreact/use-observable'
 
-import {
-  NavLink,
-} from '../components/link'
 import {
   Section,
   SectionContainer,
@@ -30,16 +27,18 @@ import {
 
 import SteelixImg from '../../assets/steelix.png'
 import { ConfigContext } from '../services/config'
+import { Select } from '../components/select/select'
+import { Checkbox } from '../components/checkbox/checkbox'
 
-export default function Pokemon () {
-  return (
-    <>
-      <SEO title="Pokémon" />
-      <PokemonList />
-      <PokemonStats />
-    </>
-  )
-}
+// export default function Pokemon () {
+//   return (
+//     <>
+//       <SEO title="Pokémon" />
+//       <PokemonList />
+//       <PokemonStats />
+//     </>
+//   )
+// }
 
 function StatBlock ({ stats, id }) {
   const list = Object.entries(stats)
@@ -53,9 +52,12 @@ function StatBlock ({ stats, id }) {
     ))
 }
 
-function PokemonStats () {
-  const config = useContext(ConfigContext)
+export default function Pokemon () {
+  const params = useParams()
   const pcService = usePolishedCrystalService()
+  pcService.statsStore.data.setActive(params.id ?? null)
+
+  const config = useContext(ConfigContext)
   const [ id ] = useObservable(pcService.statsStore.query.selectActiveId())
   const [ stat ] = useObservable(pcService.statsStore.query.selectActive())
   const [ sprites ] = useObservable(pcService.spritesStore.query.selectAll())
@@ -82,32 +84,118 @@ function PokemonStats () {
     }
   }, [ id ])
 
-  if (!id) {
-    return (
-      <Section contentClass="py-4">
-        <p className="lead">
-          Try selecting a Pokémon from the dropdown!
-        </p>
-        <p className="lead">
-          <NavLink to="/pokemon/steelix">
-            Steelix perhaps?
-          </NavLink>
-        </p>
-        <img src={SteelixImg} />
-      </Section>
-    )
-  }
-  if (missingData) {
-    return (<PokeballSpinner />)
-  }
+  console.log('id :', id)
 
-  const data = formatStat(stat, faithful)
-  const spriteRoutes = pcService.getSpritesForPokemon(sprites, stat.id)
+  const data = stat ? formatStat(stat, faithful) : undefined
+  const spriteRoutes = stat ? pcService.getSpritesForPokemon(sprites, stat.id) : undefined
 
   return (
     <>
+      <SEO title="Pokémon" />
+      <PokemonList
+        faithful={{
+          hidden: !stat,
+          setValue: setFaithful,
+          checked: faithful || !stat?.unfaithful,
+          disabled: !stat?.unfaithful,
+        }}
+      />
+      {
+        !id
+          ? (<NoPokemonSelected/>)
+          : missingData
+            ? (<PokeballSpinner/>)
+            : (
+              <PokemonStats
+                data={data}
+                stat={stat}
+                spriteRoutes={spriteRoutes}
+              />
+            )
+      }
+    </>
+  )
+}
+
+function NoPokemonSelected () {
+  return (
+    <div>
+      <p className="lead">
+        Try selecting a Pokémon from the dropdown!
+      </p>
+      <p className="lead">
+        <NavLink to="/pokemon/steelix">
+          Steelix perhaps?
+        </NavLink>
+      </p>
+      <img src={SteelixImg} />
+    </div>
+  )
+}
+
+function PokemonList ({ faithful }) {
+  const pcService = usePolishedCrystalService()
+  const [ activeId ] = useObservable(
+    pcService.statsStore.query.selectActiveId(),
+  )
+  console.log('activeId :', activeId)
+  const [ list, setList ] = useState()
+  const history = useHistory()
+
+  useEffect(() => {
+    pcService?.fetchStatList()
+      .then((list) => setList(list.map(({ id, displayName }) => ({
+        id: id.toLowerCase(),
+        displayName,
+      }))))
+  }, [ pcService ])
+
+  const options = list
+    ? list.map((p, i) => (
+      <option key={`pokemon-option-${i}`} value={p.id}>
+        {p.displayName}
+      </option>
+    ))
+    : activeId
+      ? (<option value={activeId}>{activeId}</option>)
+      : undefined
+
+  return (
+    <div className="d-flex justify-content-between px-2 mb-2">
+      <Select
+        style={{
+          minWidth: 240,
+        }}
+        className="lead"
+        value={activeId?.toLowerCase() ?? ''}
+        onChange={
+          (event) => history
+            .push(`/pokemon/${event.target.value.toLowerCase()}`)
+        }
+      >
+        <option value="" disabled={true}>
+          Choose your Pokémon!
+        </option>
+        {options}
+      </Select>
+      <div className={faithful.hidden ? 'd-none' : ''}>
+        <Checkbox
+          id="faithful-check"
+          label="Faithful Data"
+          disabled={faithful.disabled}
+          checked={faithful.checked}
+          onChange={(event) => faithful.setValue(event.target.checked)}
+        />
+      </div>
+    </div>
+  )
+}
+
+function PokemonStats ({ data, spriteRoutes, stat }) {
+  return (
+    <>
       <SEO title={data.displayName} image={spriteRoutes[0].urls[0]} />
-      <div className="d-flex justify-content-between px-2">
+      {/* <div className="d-flex justify-content-between px-2">
         <h3>
           {data.displayName}
         </h3>
@@ -123,150 +211,110 @@ function PokemonStats () {
             onChange={(event) => setFaithful(event.target.checked)}
           />
         </div>
-      </div>
-      <Sprites sprites={spriteRoutes} />
-      <SectionContainer>
-        <Section title="Types" withBox="left">
-          {
-            data.types.map((type, i) => (
-              <div key={`type-${i}`}>
-                {type}
-              </div>
-            ))
-          }
-        </Section>
-        <Section title="Wild Held Items" withBox="left">
-          {
-            data.heldItems.length === 0
-              ? <div>None</div>
-              : data.heldItems.map((item, i) => (
-                <div key={`items-${i}`}>
-                  {item}
+      </div> */}
+      <SectionContainer vertical={true}>
+        <Sprites sprites={spriteRoutes} />
+        <SectionContainer>
+          <Section title="Types" withBox="left">
+            {
+              data.types.map((type, i) => (
+                <div key={`type-${i}`}>
+                  {type}
                 </div>
               ))
-          }
-        </Section>
-        <Section title="Egg Groups" withBox="left">
-          {
-            data.eggGroups.map((group, i) => (
-              <div key={`group-${i}`}>{group}</div>
-            ))
-          }
-        </Section>
-        <Gender gender={data.gender} />
-        <Section title="Evolutions">
-          {
-            data.evolutions.length === 0
-              ? <div>None</div>
-              : data.evolutions.map((evo, i) => (
-                <p key={`evo-${i}`} className="m-0">
-                  <RouterLink to={`/pokemon/${evo.to.id.toLowerCase()}`}>
-                    {evo.to.displayName}
-                  </RouterLink>:&nbsp;{evo.type}&nbsp;{evo.requirement}
-                </p>
+            }
+          </Section>
+          <Section title="Wild Held Items" withBox="left">
+            {
+              data.heldItems.length === 0
+                ? <div>None</div>
+                : data.heldItems.map((item, i) => (
+                  <div key={`items-${i}`}>
+                    {item}
+                  </div>
+                ))
+            }
+          </Section>
+          <Section title="Egg Groups" withBox="left">
+            {
+              data.eggGroups.map((group, i) => (
+                <div key={`group-${i}`}>{group}</div>
               ))
-          }
-        </Section>
-      </SectionContainer>
-      <SectionContainer>
-        <SectionContainer>
-          <Section title="Growth Rate">
-            {data.growthRate}
+            }
           </Section>
-          <Section title="Hatch Cycles">
-            {data.hatchCycles}
-          </Section>
-        </SectionContainer>
-        <SectionContainer>
-          <Section title="Base Experience">
-            {data.baseExp}
-          </Section>
-          <Section title="Catch Rate">
-            {data.catchRate}
+          <Gender gender={data.gender} />
+          <Section title="Evolutions">
+            {
+              data.evolutions.length === 0
+                ? <div>None</div>
+                : data.evolutions.map((evo, i) => (
+                  <p key={`evo-${i}`} className="m-0">
+                    <NavLink to={`/pokemon/${evo.to.id.toLowerCase()}`}>
+                      {evo.to.displayName}
+                    </NavLink>:&nbsp;{evo.type}&nbsp;{evo.requirement}
+                  </p>
+                ))
+            }
           </Section>
         </SectionContainer>
-      </SectionContainer>
-      {
-        stat.complete
-          ? <Abilities abilities={data.abilities} />
-          : <PokeballSpinner />
-      }
-      <SectionContainer>
-        <Section
-          title="Base Stats"
-          contentClass="d-flex justify-content-around"
-        >
-          <StatBlock id="base" stats={data.baseStats} />
-        </Section>
-        <Section
-          title="EV Yield"
-          contentClass="d-flex justify-content-around"
-        >
-          <StatBlock id="ev" stats={data.evYield} />
-        </Section>
-      </SectionContainer>
-      {
-        stat.complete
-          ? (
-            <>
-              <Section
-                title="Level Up Moves"
-                contentClass="d-flex justify-content-center"
-              >
-                <MoveTable moves={data.movesByLevel} />
-              </Section>
-              <Section
-                title="TM/HM Moves"
-                contentClass="d-flex justify-content-center"
-              >
-                <MoveTable moves={data.movesByTMHM} tmhm={true} />
-              </Section>
-            </>
-          ) : <PokeballSpinner />
-      }
-    </>
-  )
-}
-
-function PokemonList () {
-  const params = useParams()
-  const pcService = usePolishedCrystalService()
-  pcService.statsStore.data.setActive(params.id ?? null)
-  const [ activeId ] = useObservable(
-    pcService.statsStore.query.selectActiveId(),
-  )
-  const [ list, setList ] = useState()
-  const history = useHistory()
-
-  useEffect(() => {
-    pcService?.fetchStatList()
-      .then((list) => setList(list.map(({ id, displayName }) => ({
-        id: id.toLowerCase(),
-        displayName,
-      }))))
-  }, [ pcService ])
-
-  const options = list && list.map((p, i) => (
-    <option key={`pokemon-option-${i}`} value={p.id}>
-      {p.displayName}
-    </option>
-  ))
-
-  return (
-    <div className="d-flex justify-content-end px-2">
-      <select
-        value={activeId?.toLowerCase() ?? ''}
-        onChange={
-          (event) => history
-            .push(`/pokemon/${event.target.value.toLowerCase()}`)
+        <SectionContainer>
+          <SectionContainer>
+            <Section title="Growth Rate">
+              {data.growthRate}
+            </Section>
+            <Section title="Hatch Cycles">
+              {data.hatchCycles}
+            </Section>
+          </SectionContainer>
+          <SectionContainer>
+            <Section title="Base Experience">
+              {data.baseExp}
+            </Section>
+            <Section title="Catch Rate">
+              {data.catchRate}
+            </Section>
+          </SectionContainer>
+        </SectionContainer>
+        {
+          stat.complete
+            ? <Abilities abilities={data.abilities} />
+            : <PokeballSpinner />
         }
-      >
-        <option value="" disabled={true}>
-          Select Pokemon
-        </option>
-        {options}
-      </select>
-    </div>
+        <SectionContainer>
+          <Section
+            title="Base Stats"
+            contentClass="d-flex justify-content-around"
+          >
+            <StatBlock id="base" stats={data.baseStats} />
+          </Section>
+          <Section
+            title="EV Yield"
+            contentClass="d-flex justify-content-around"
+          >
+            <StatBlock id="ev" stats={data.evYield} />
+          </Section>
+        </SectionContainer>
+        {
+          stat.complete
+            ? (
+              <>
+                <Section
+                  title="Level Up Moves"
+                  contentClass="d-flex justify-content-center"
+                >
+                  <MoveTable moves={data.movesByLevel} />
+                </Section>
+                <Section
+                  title="TM/HM Moves"
+                  contentClass="d-flex justify-content-center"
+                >
+                  <MoveTable moves={data.movesByTMHM} tmhm={true} />
+                </Section>
+              </>
+            ) : <PokeballSpinner />
+        }
+      </SectionContainer>
+    </>
   )
 }
 

@@ -8,17 +8,16 @@ import {
 import { Header } from './header'
 import { Footer } from './footer'
 import {
-  Routes,
   config as routeConfig,
 } from './routes'
 
 import { ConfigContext } from '../services/config'
+import { ThemeProvider } from '../services/theme'
 import {
   VersionContext,
   PrefetchedContext,
 } from '../services/pc-api'
-
-import styles from './app.module.scss'
+import { Main } from './main'
 
 export function App ({ data }) {
   const [ currentVersion, setCurrentVersion ] = useState(data.versions[0])
@@ -32,16 +31,16 @@ export function App ({ data }) {
   return (
     <React.StrictMode>
       <PrefetchedContext.Provider value={data.stores}>
-        <ConfigContext.Provider value={data.config}>
-          <VersionContext.Provider value={versionData}>
-            <MainSEO manifest={data.manifest} />
-            <Header />
-            <main className={styles['main-area']}>
-              <Routes />
-            </main>
-            <Footer />
-          </VersionContext.Provider>
-        </ConfigContext.Provider>
+        <ThemeProvider initial={data.cookies.theme}>
+          <ConfigContext.Provider value={data.config}>
+            <VersionContext.Provider value={versionData}>
+              <MainSEO manifest={data.manifest} />
+              <Header />
+              <Main />
+              <Footer />
+            </VersionContext.Provider>
+          </ConfigContext.Provider>
+        </ThemeProvider>
       </PrefetchedContext.Provider>
     </React.StrictMode>
   )

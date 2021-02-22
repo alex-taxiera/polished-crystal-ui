@@ -24,11 +24,14 @@ export function Section ({
       {
         title
           ? (
-            <header>
-              <h6>
-                {title}
-              </h6>
-            </header>
+            <>
+              <header>
+                <h6>
+                  {title}
+                </h6>
+              </header>
+              <hr />
+            </>
           ) : undefined
       }
       <main className={mainClass}>
