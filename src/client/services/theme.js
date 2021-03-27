@@ -40,8 +40,6 @@ export function ThemeProvider ({ children, initial }) {
     setCookie(newTheme)
   }
 
-  console.log('theme in provider:', theme)
-
   return (
     <ThemeContext.Provider value={{
       theme,

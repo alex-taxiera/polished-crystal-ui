@@ -11,7 +11,7 @@ import styles from './main.module.scss'
 
 export function Main () {
   return (
-    <main className={styles['main-area']}>
+    <main id="main-content-area" className={styles['main-area']}>
       <MainWidth>
         <Routes />
       </MainWidth>

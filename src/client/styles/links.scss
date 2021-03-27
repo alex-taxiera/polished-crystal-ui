@@ -3,6 +3,7 @@
 a,
 a:hover {
   color: inherit;
+  padding: 0.5rem;
 
   &.no-decorate {
     text-decoration: none;
@@ -10,5 +11,6 @@ a:hover {
 
   p & {
     color: var(--color-secondary);
+    padding: 0;
   }
 }

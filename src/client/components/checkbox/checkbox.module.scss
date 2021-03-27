@@ -1,5 +1,37 @@
 .checkbox {
+  position: relative;
+  display: flex;
+  flex-flow: row-reverse;
+  align-items: center;
+
   input {
+    $input-size: 1.2em;
+    margin-left: 0.5rem;
     appearance: none;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+    height: $input-size;
+    width: $input-size;
+
+    & ~ svg {
+      $icon-size: $input-size * 0.75;
+      position: absolute;
+      right: ($input-size - $icon-size) / 2;
+      opacity: 0;
+      height: $icon-size;
+      fill: currentColor;
+      pointer-events: none;
+    }
+
+    &:checked ~ svg {
+      opacity: 1;
+    }
+
+    &:disabled,
+    &:disabled ~ label,
+    &:disabled ~ svg {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }

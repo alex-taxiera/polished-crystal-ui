@@ -2,6 +2,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  border-bottom: 1px solid currentColor;
 
   label {
     position: absolute;
@@ -9,7 +10,7 @@
     right: 10px;
     width: 0.5em;
     height: 0.3em;
-    background-color: var(--color-font);
+    background-color: currentColor;
     clip-path: polygon(100% 0%, 0 0%, 50% 100%);
     content: '';
   }

@@ -1,5 +1,4 @@
 import React from 'react'
-import cx from 'classnames'
 
 import Check from './check.svg'
 
@@ -14,10 +13,6 @@ export function Checkbox ({
 }) {
   return (
     <div className={styles.checkbox}>
-      <label htmlFor={id}>
-        {label}
-      </label>
-      &nbsp;
       <input
         type="checkbox"
         id={id}
@@ -25,6 +20,9 @@ export function Checkbox ({
         disabled={disabled}
         onChange={onChange}
       />
+      <label htmlFor={id}>
+        {label}
+      </label>
       <Check/>
     </div>
   )

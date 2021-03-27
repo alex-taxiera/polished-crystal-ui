@@ -14,13 +14,16 @@ import { ThemeToggle } from '../components/theme-toggle/theme-toggle'
 export function Header () {
   return (
     <header className={cx('mb-4', styles['page-header'])}>
+      <a className={styles['skip-to-content-link']} href="#main-content-area">
+        Skip Navigation
+      </a>
       <MainWidth>
         <div className="d-flex justify-content-between align-items-center">
           <div className={styles.title}>
             <NavLink className="no-decorate d-flex align-items-center" to="/">
               <img src={SuicuneImg} height={35} />
               <h1 className="ml-3">
-                  Polished Crystal Data
+                Polished Crystal Data
               </h1>
             </NavLink>
           </div>

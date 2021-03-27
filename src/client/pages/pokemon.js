@@ -30,16 +30,6 @@ import { ConfigContext } from '../services/config'
 import { Select } from '../components/select/select'
 import { Checkbox } from '../components/checkbox/checkbox'
 
-// export default function Pokemon () {
-//   return (
-//     <>
-//       <SEO title="Pokémon" />
-//       <PokemonList />
-//       <PokemonStats />
-//     </>
-//   )
-// }
-
 function StatBlock ({ stats, id }) {
   const list = Object.entries(stats)
   return list
@@ -84,15 +74,16 @@ export default function Pokemon () {
     }
   }, [ id ])
 
-  console.log('id :', id)
-
   const data = stat ? formatStat(stat, faithful) : undefined
-  const spriteRoutes = stat ? pcService.getSpritesForPokemon(sprites, stat.id) : undefined
+  const spriteRoutes = stat
+    ? pcService.getSpritesForPokemon(sprites, stat.id)
+    : undefined
 
   return (
     <>
       <SEO title="Pokémon" />
       <PokemonList
+        activeId={id}
         faithful={{
           hidden: !stat,
           setValue: setFaithful,
@@ -102,7 +93,7 @@ export default function Pokemon () {
       />
       {
         !id
-          ? (<NoPokemonSelected/>)
+          ? (<Pizza/>)
           : missingData
             ? (<PokeballSpinner/>)
             : (
@@ -133,12 +124,8 @@ function NoPokemonSelected () {
   )
 }
 
-function PokemonList ({ faithful }) {
+function PokemonList ({ faithful, activeId }) {
   const pcService = usePolishedCrystalService()
-  const [ activeId ] = useObservable(
-    pcService.statsStore.query.selectActiveId(),
-  )
-  console.log('activeId :', activeId)
   const [ list, setList ] = useState()
   const history = useHistory()
 
@@ -191,7 +178,9 @@ function PokemonList ({ faithful }) {
   )
 }
 
-function PokemonStats ({ data, spriteRoutes, stat }) {
+function PokemonStats ({
+  data, spriteRoutes, stat,
+}) {
   return (
     <>
       <SEO title={data.displayName} image={spriteRoutes[0].urls[0]} />
