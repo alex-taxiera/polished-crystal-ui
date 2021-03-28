@@ -93,7 +93,7 @@ export default function Pokemon () {
       />
       {
         !id
-          ? (<Pizza/>)
+          ? (<NoPokemonSelected/>)
           : missingData
             ? (<PokeballSpinner/>)
             : (
