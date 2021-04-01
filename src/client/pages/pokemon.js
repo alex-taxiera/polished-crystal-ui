@@ -9,6 +9,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { useObservable } from '@libreact/use-observable'
+import memoize from 'fast-memoize'
 
 import {
   Section,
@@ -42,21 +43,20 @@ function StatBlock ({ stats, id }) {
     ))
 }
 
-export default function Pokemon () {
+export function useActivePokemon () {
+  const config = useContext(ConfigContext)
   const params = useParams()
   const pcService = usePolishedCrystalService()
   pcService.statsStore.data.setActive(params.id ?? null)
 
-  const config = useContext(ConfigContext)
   const [ id ] = useObservable(pcService.statsStore.query.selectActiveId())
   const [ stat ] = useObservable(pcService.statsStore.query.selectActive())
   const [ sprites ] = useObservable(pcService.spritesStore.query.selectAll())
-  const [ faithful, setFaithful ] = useState(false)
 
   const missingData = !stat || !sprites.length
   const needsBackfill = !stat?.complete && !config.isServer
 
-  useEffect(async () => {
+  useEffect(() => {
     if (!id) {
       return
     }
@@ -72,18 +72,47 @@ export default function Pokemon () {
       }
       Promise.all(reqs)
     }
-  }, [ id ])
+  }, [ id, pcService ])
+
+  return {
+    activeId: id,
+    stat,
+  }
+}
+
+export function usePokemonSprites () {
+  const pcService = usePolishedCrystalService()
+
+  const [ sprites ] = useObservable(pcService.spritesStore.query.selectAll())
+
+  useEffect(() => {
+    if (!sprites.length) {
+      pcService.fetchSpriteList().toPromise()
+    }
+  }, [ pcService ])
+
+  return sprites
+}
+
+export default function Pokemon () {
+  const pcApiService = usePolishedCrystalService()
+  const {
+    activeId,
+    stat,
+  } = useActivePokemon()
+  const sprites = usePokemonSprites()
+  const [ faithful, setFaithful ] = useState(false)
+
+  const missingData = !stat || !sprites.length
 
   const data = stat ? formatStat(stat, faithful) : undefined
-  const spriteRoutes = stat
-    ? pcService.getSpritesForPokemon(sprites, stat.id)
-    : undefined
+  const spriteRoutes = pcApiService.getSpritesForPokemon(sprites, activeId)
 
   return (
     <>
       <SEO title="Pokémon" />
       <PokemonList
-        activeId={id}
+        activeId={activeId}
         faithful={{
           hidden: !stat,
           setValue: setFaithful,
@@ -92,7 +121,7 @@ export default function Pokemon () {
         }}
       />
       {
-        !id
+        !activeId
           ? (<NoPokemonSelected/>)
           : missingData
             ? (<PokeballSpinner/>)
@@ -312,7 +341,7 @@ function pickStat (data, key, faithful = false) {
   return (!faithful && unfaithful[key]) || data[key]
 }
 
-function formatStat (data, faithful = false) {
+const formatStat = memoize((data, faithful = false) => {
   return {
     ...data,
     types: pickStat(data, 'types', faithful),
@@ -333,7 +362,7 @@ function formatStat (data, faithful = false) {
     movesByTMHM: data.movesByTMHM
       .concat((!faithful && data.unfaithful?.movesByTMHM) || []),
   }
-}
+})
 
 function sortLevelMoves (a, b) {
   const a1 = a.evolution ? 1.5 : a.level

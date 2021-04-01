@@ -33,6 +33,7 @@
     "classnames": "^2.2.6",
     "config": "^3.3.3",
     "cookie": "^0.4.1",
+    "fast-memoize": "^2.5.2",
     "helica": "github:moondrop/helica",
     "memoizee": "^0.4.14",
     "node-fetch": "^2.6.1",

@@ -273,8 +273,11 @@ export class PolishedCrystalService {
     }`
   }
 
-  // TODO: remove this from service
   getSpritesForPokemon (sprites, pokemon) {
+    if (!sprites?.length || !pokemon) {
+      return
+    }
+
     const exact = sprites
       .filter(({ id: sprite }) => sprite === pokemon.toLowerCase())
     const relevantSprites = exact.length > 0
